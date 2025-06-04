@@ -46,7 +46,6 @@ contract AmericanOptionsTest is Test {
         assertEq(base.balanceOf(address(options)), 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 1_00);
 
-
         vm.prank(recipient);
         vm.expectRevert();
         options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
@@ -120,6 +119,9 @@ contract AmericanOptionsTest is Test {
 
             options.transfer(address(0), marketId, 1_00);
             assertEq(options.balanceOf(address(this), marketId), 0);
+
+            vm.expectRevert();
+            options.expire(marketId, 1_00);
 
             skip(2 * DAY);
 
