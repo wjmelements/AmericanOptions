@@ -23,6 +23,9 @@ contract AmericanOptionsTest is Test {
     }
 
     function test_DepositWithraw() public {
+        vm.expectRevert();
+        options.depositTo(address(this), base, 1_00);
+
         base.approve(address(options), 1_00);
         options.depositTo(address(this), base, 1_00);
         assertEq(base.balanceOf(address(this)), 9999_00);
@@ -43,6 +46,11 @@ contract AmericanOptionsTest is Test {
         assertEq(base.balanceOf(address(options)), 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 1_00);
 
+
+        vm.prank(recipient);
+        vm.expectRevert();
+        options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
+
         vm.prank(spender);
         options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
         assertEq(options.balanceOf(recipient, MarketId.fromToken(base)), 1_00);
@@ -61,6 +69,10 @@ contract AmericanOptionsTest is Test {
         assertEq(base.balanceOf(address(this)), 9999_00);
         assertEq(base.balanceOf(address(options)), 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 1_00);
+
+        vm.prank(recipient);
+        vm.expectRevert();
+        options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
 
         vm.prank(spender);
         options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
@@ -112,6 +124,9 @@ contract AmericanOptionsTest is Test {
             skip(2 * DAY);
 
             options.expire(marketId, 1_00);
+
+            vm.expectRevert();
+            options.expire(marketId, 1_00);
         }
 
         options.withdrawTo(address(this), token, 1_00);
@@ -153,6 +168,10 @@ contract AmericanOptionsTest is Test {
             assertEq(token.balanceOf(recipient), 1_00);
         }
         vm.stopPrank();
+
+        skip(DAY);
+        vm.expectRevert();
+        options.expire(marketId, 1_00);
 
         options.acceptAssignment(marketId, 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 4_00);
