@@ -33,6 +33,25 @@ contract AmericanOptionsTest is Test {
         assertEq(base.balanceOf(address(this)), 10000_00);
     }
 
+    function testFuzz_SetOperatorTransferFrom(address spender, address recipient) public {
+        assertTrue(options.setOperator(spender, true));
+        assertTrue(options.isOperator(address(this), spender));
+
+        base.approve(address(options), 1_00);
+        options.depositTo(address(this), base, 1_00);
+        assertEq(base.balanceOf(address(this)), 9999_00);
+        assertEq(base.balanceOf(address(options)), 1_00);
+        assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 1_00);
+
+        vm.prank(spender);
+        options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
+        assertEq(options.balanceOf(recipient, MarketId.fromToken(base)), 1_00);
+
+        vm.prank(recipient);
+        options.withdrawTo(address(this), base, 1_00);
+        assertEq(base.balanceOf(address(this)), 10000_00);
+    }
+
     function test_DepositOpenCloseWithdraw() public {
         token.approve(address(options), 1_00);
         options.depositTo(address(this), token, 1_00);
@@ -40,9 +59,9 @@ contract AmericanOptionsTest is Test {
         assertEq(token.balanceOf(address(options)), 1_00);
 
         {
-            uint expiry = block.timestamp + 2 * DAY;
-            uint strike = 48592008000;
-            uint marketId = MarketId.pack(token, expiry, strike);
+            uint256 expiry = block.timestamp + 2 * DAY;
+            uint256 strike = 48592008000;
+            uint256 marketId = MarketId.pack(token, expiry, strike);
             options.open(marketId, 1_00);
             assertEq(options.balanceOf(address(this), marketId), 1_00);
 
@@ -61,9 +80,9 @@ contract AmericanOptionsTest is Test {
         assertEq(token.balanceOf(address(options)), 1_00);
 
         {
-            uint expiry = block.timestamp + 2 * DAY;
-            uint strike = 48592008000;
-            uint marketId = MarketId.pack(token, expiry, strike);
+            uint256 expiry = block.timestamp + 2 * DAY;
+            uint256 strike = 48592008000;
+            uint256 marketId = MarketId.pack(token, expiry, strike);
             options.open(marketId, 1_00);
             assertEq(options.balanceOf(address(this), marketId), 1_00);
 

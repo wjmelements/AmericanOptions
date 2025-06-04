@@ -6,7 +6,7 @@ import {IERC6909} from "forge-std/interfaces/IERC6909.sol";
 import {MarketId} from "./MarketId.sol";
 import {PriceQ36} from "./PriceQ36.sol";
 
-contract AmericanCallOptions { /*is IERC6909*/
+contract AmericanCallOptions is IERC6909 {
     IERC20 private immutable base;
     uint256 private immutable baseMarket;
 
@@ -20,8 +20,8 @@ contract AmericanCallOptions { /*is IERC6909*/
 
     // IERC69090
     mapping(address => mapping(uint256 => uint256)) public balanceOf;
-    mapping(address => mapping(address => mapping(uint256 => uint256))) allowance;
-    mapping(address => mapping(address => bool)) isOperator;
+    mapping(address => mapping(address => mapping(uint256 => uint256))) public allowance;
+    mapping(address => mapping(address => bool)) public isOperator;
 
     function depositTo(address recipient, IERC20 token, uint256 amount) external {
         require(token.transferFrom(msg.sender, address(this), amount));
@@ -33,9 +33,33 @@ contract AmericanCallOptions { /*is IERC6909*/
         balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
     }
 
-    function transfer(address recipient, uint256 id, uint256 amount) external {
+    function transfer(address recipient, uint256 id, uint256 amount) external returns (bool) {
         balanceOf[msg.sender][id] -= amount;
         balanceOf[recipient][id] += amount;
+        return true;
+    }
+
+    function transferFrom(address owner, address recipient, uint256 id, uint256 amount) external returns (bool) {
+        if (!isOperator[owner][msg.sender]) {
+            allowance[owner][msg.sender][id] -= amount;
+        }
+        balanceOf[owner][id] -= amount;
+        balanceOf[recipient][id] += amount;
+        return true;
+    }
+
+    function setOperator(address spender, bool approved) external returns (bool) {
+        isOperator[msg.sender][spender] = approved;
+        return true;
+    }
+
+    function approve(address spender, uint256 id, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender][id] = amount;
+        return true;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public pure returns (bool supported) {
+        return interfaceId == 0x0f632fb3 || interfaceId == 0x01ffc9a7;
     }
 
     // Markets
