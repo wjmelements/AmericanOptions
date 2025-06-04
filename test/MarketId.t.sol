@@ -31,7 +31,7 @@ contract AmericanOptionsTest is Test {
         assertEq(MarketId.fromToken(usd).toTokenId(), MarketId.fromToken(usd));
     }
 
-    function test_USD_unpack_pack() public view {
+    function test_USD_unpack_pack() public pure {
         uint256 marketId = 0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef;
         (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
         uint256 marketIdDecoded = MarketId.pack(token, expiry, strike);
