@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IERC6909} from "forge-std/interfaces/IERC6909.sol";
 import {MarketId} from "./MarketId.sol";
-import {PriceQ36} from "./PriceQ36.sol";
+import {PriceQ40} from "./PriceQ40.sol";
 
 contract AmericanCallOptions is IERC6909 {
     IERC20 private immutable base;
@@ -16,7 +16,7 @@ contract AmericanCallOptions is IERC6909 {
     }
 
     using MarketId for uint256;
-    using PriceQ36 for uint256;
+    using PriceQ40 for uint256;
 
     // IERC69090
     mapping(address => mapping(uint256 => uint256)) public balanceOf;

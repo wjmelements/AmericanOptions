@@ -154,7 +154,7 @@ contract AmericanOptionsTest is Test {
             assertEq(base.balanceOf(address(this)), 9996_00);
         }
 
-        uint256 strike = 1 << 37; // 4
+        uint256 strike = 1 << 41; // 4
         uint256 marketId = MarketId.pack(token, block.timestamp + DAY, strike);
         options.open(marketId, 100);
         assertEq(options.balanceOf(address(this), marketId), 1_00);

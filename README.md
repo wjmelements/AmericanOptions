@@ -28,8 +28,8 @@ This restricts precision to an amount slightly less than a day.
 The benefit is increased price precision and longer lifetime.
 
 ### Price
-Price is a 72-bit square root ratio in q36.
-This means that `2**36` is 1, `2**37` is 4, and `2**35` is 0.25.
+Price is a 72-bit square root ratio in q40.
+This means that `2**40` is 1, `2**41` is 4, and `2**39` is 0.25.
 
 ### Assignment
 Executing call options purchases locked collateral.
