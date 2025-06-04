@@ -46,9 +46,11 @@ contract AmericanOptionsTest is Test {
         assertEq(base.balanceOf(address(options)), 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 1_00);
 
-        vm.prank(recipient);
-        vm.expectRevert();
-        options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
+        if (recipient != spender) {
+            vm.prank(recipient);
+            vm.expectRevert();
+            options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
+        }
 
         vm.prank(spender);
         options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
@@ -69,9 +71,11 @@ contract AmericanOptionsTest is Test {
         assertEq(base.balanceOf(address(options)), 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 1_00);
 
-        vm.prank(recipient);
-        vm.expectRevert();
-        options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
+        if (recipient != spender) {
+            vm.prank(recipient);
+            vm.expectRevert();
+            options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
+        }
 
         vm.prank(spender);
         options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
