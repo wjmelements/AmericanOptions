@@ -2,13 +2,13 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Counter} from "../src/Counter.sol";
+import {AmericanOption} from "../src/AmericanOption.sol";
 
-contract CounterTest is Test {
-    Counter public counter;
+contract AmericanOptionTest is Test {
+    AmericanOption public counter;
 
     function setUp() public {
-        counter = new Counter();
+        counter = new AmericanOption();
         counter.setNumber(0);
     }
 
