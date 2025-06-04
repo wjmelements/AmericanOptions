@@ -99,7 +99,6 @@ contract AmericanCallOptions is IERC6909 {
         emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
         balanceOf[msg.sender][MarketId.fromToken(token)] += amount;
         emit Transfer(msg.sender, address(0), msg.sender, MarketId.fromToken(token), amount);
-        // TODO verify this is one sstore
         markets[marketId].exercised += amount;
         markets[marketId].remaining -= amount;
     }
