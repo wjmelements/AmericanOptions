@@ -7,7 +7,7 @@ import {MarketId} from "../src/MarketId.sol";
 import {Expiry} from "../src/Expiry.sol";
 import {TestUSD} from "./TestUSD.sol";
 
-contract AmericanOptionsTest is Test {
+contract MarketIdTest is Test {
     TestUSD usd;
 
     using MarketId for uint256;
