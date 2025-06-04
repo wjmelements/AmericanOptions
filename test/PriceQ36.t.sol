@@ -11,6 +11,7 @@ contract PriceQ36Test is Test {
         uint256 ONE_QUARTER = 1 << 35;
         uint256 FOUR = 1 << 37;
         uint256 WAD = ONE * 10 ** 9;
+        uint256 UNWAD = ONE / 10 ** 9;
 
         assertEq(ONE.toBaseUp(10 ** 27), 10 ** 27);
         assertEq(ONE.toBaseDown(10 ** 27), 10 ** 27);
@@ -32,5 +33,8 @@ contract PriceQ36Test is Test {
 
         assertEq(WAD.toBaseUp(100), 100 * 10 ** 18);
         assertEq(WAD.toBaseDown(100), 100 * 10 ** 18);
+
+        assertEq(UNWAD.toBaseUp(100 * 10 ** 18), 98);
+        assertEq(UNWAD.toBaseDown(100 * 10 ** 18), 97);
     }
 }
