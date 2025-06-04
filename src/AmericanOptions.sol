@@ -79,7 +79,7 @@ contract AmericanCallOptions is IERC6909 {
     mapping(uint256 => Market) markets;
 
     function open(uint256 marketId, uint128 amount) external {
-        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
+        (IERC20 token, uint256 expiry, /*uint256 strike*/) = marketId.unpack();
         require(expiry >= block.timestamp);
         balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
         emit Transfer(msg.sender, msg.sender, address(0), MarketId.fromToken(token), amount);
@@ -114,7 +114,7 @@ contract AmericanCallOptions is IERC6909 {
     }
 
     function expire(uint256 marketId, uint128 amount) external {
-        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
+        (IERC20 token, uint256 expiry, /*uint256 strike*/) = marketId.unpack();
         require(expiry < block.timestamp);
         lockedCollateral[msg.sender][marketId] -= amount;
         markets[marketId].remaining -= amount;
@@ -123,7 +123,7 @@ contract AmericanCallOptions is IERC6909 {
     }
 
     function acceptAssignment(uint256 marketId, uint128 amount) external {
-        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
+        (/*IERC20 token*/, /*uint256 expiry*/, uint256 strike) = marketId.unpack();
         markets[marketId].exercised -= amount;
         uint256 baseAmount = strike.toBaseDown(amount);
         balanceOf[msg.sender][baseMarket] += baseAmount;
