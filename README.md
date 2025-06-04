@@ -28,7 +28,7 @@ This restricts precision to an amount slightly less than a day.
 The benefit is increased price precision and longer lifetime.
 
 ### Price
-Price is a 72-bit square root ratio in q40.
+Price is a 72-bit square root ratio in [q32.40](https://en.wikipedia.org/wiki/Q_(number_format)), which I abbreviate as Q40 in the codebase.
 This means that `2**40` is 1, `2**41` is 4, and `2**39` is 0.25.
 
 ### Assignment
