@@ -19,7 +19,7 @@ contract AmericanCallOptions { /*is IERC6909*/
     using PriceQ36 for uint256;
 
     // IERC69090
-    mapping(address => mapping(uint256 => uint256)) balanceOf;
+    mapping(address => mapping(uint256 => uint256)) public balanceOf;
     mapping(address => mapping(address => mapping(uint256 => uint256))) allowance;
     mapping(address => mapping(address => bool)) isOperator;
 
@@ -31,6 +31,11 @@ contract AmericanCallOptions { /*is IERC6909*/
     function withdrawTo(address recipient, IERC20 token, uint256 amount) external {
         require(token.transfer(recipient, amount));
         balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
+    }
+
+    function transfer(address recipient, uint256 id, uint256 amount) external {
+        balanceOf[msg.sender][id] -= amount;
+        balanceOf[recipient][id] += amount;
     }
 
     // Markets

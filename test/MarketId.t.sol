@@ -25,6 +25,10 @@ contract AmericanOptionsTest is Test {
         assertEq(address(tokenDecoded), address(usd));
         assertEq(strikeDecoded, strike);
         assertEq(expiryDecoded, expiry);
+
+        assertEq(address(marketId.toToken()), address(usd));
+        assertEq(address(MarketId.fromToken(usd).toToken()), address(usd));
+        assertEq(MarketId.fromToken(usd).toTokenId(), MarketId.fromToken(usd));
     }
 
     function test_USD_unpack_pack() public view {
