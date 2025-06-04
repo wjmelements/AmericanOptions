@@ -14,9 +14,9 @@ The upper bits of the option market identifier indicate the price and the expiry
 
 When expiry and price are 0, that refers to the raw token balance, used as collateral to mint call options.
 This is safe because a market with expiry of zero cannot be created with `open` due to the expiry check.
-Therefore such a market cannot have positive `lockedCollateral` or `balanceOf`. 
-Without `balanceOf`, a market cannot `exercise` or `close`.
+Therefore such a market cannot have positive `lockedCollateral` or `Market.remaining`.
 Without `lockedCollateral`, a market cannot `close`, `expire`, or `acceptAssignment`.
+Without `Market.remaining`, a market cannot `exercise`, `close`, or `expire`.
 
 Locked collateral is not transferrable between markets because different markets have different effective valuations for the collateral.
 Locked collateral could be transferred between accounts but I haven't implemented that.
