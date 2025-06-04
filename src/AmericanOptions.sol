@@ -26,16 +26,19 @@ contract AmericanCallOptions is IERC6909 {
     function depositTo(address recipient, IERC20 token, uint256 amount) external {
         require(token.transferFrom(msg.sender, address(this), amount));
         balanceOf[recipient][MarketId.fromToken(token)] += amount;
+        emit Transfer(msg.sender, address(0), recipient, MarketId.fromToken(token), amount);
     }
 
     function withdrawTo(address recipient, IERC20 token, uint256 amount) external {
         require(token.transfer(recipient, amount));
         balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
+        emit Transfer(msg.sender, recipient, address(0), MarketId.fromToken(token), amount);
     }
 
     function transfer(address recipient, uint256 id, uint256 amount) external returns (bool) {
         balanceOf[msg.sender][id] -= amount;
         balanceOf[recipient][id] += amount;
+        emit Transfer(msg.sender, msg.sender, recipient, id, amount);
         return true;
     }
 
@@ -45,16 +48,19 @@ contract AmericanCallOptions is IERC6909 {
         }
         balanceOf[owner][id] -= amount;
         balanceOf[recipient][id] += amount;
+        emit Transfer(msg.sender, owner, recipient, id, amount);
         return true;
     }
 
     function setOperator(address spender, bool approved) external returns (bool) {
         isOperator[msg.sender][spender] = approved;
+        emit OperatorSet(msg.sender, spender, approved);
         return true;
     }
 
     function approve(address spender, uint256 id, uint256 amount) external returns (bool) {
         allowance[msg.sender][spender][id] = amount;
+        emit Approval(msg.sender, spender, id, amount);
         return true;
     }
 
@@ -76,8 +82,10 @@ contract AmericanCallOptions is IERC6909 {
         (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
         require(expiry >= block.timestamp);
         balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
+        emit Transfer(msg.sender, msg.sender, address(0), MarketId.fromToken(token), amount);
         lockedCollateral[msg.sender][marketId] += amount;
         balanceOf[msg.sender][marketId] += amount;
+        emit Transfer(msg.sender, address(0), msg.sender, marketId, amount);
         markets[marketId].remaining += amount;
     }
 
@@ -86,8 +94,11 @@ contract AmericanCallOptions is IERC6909 {
         require(expiry >= block.timestamp);
         uint256 baseAmount = strike.toBaseUp(amount);
         balanceOf[msg.sender][baseMarket] -= baseAmount;
+        emit Transfer(msg.sender, msg.sender, address(0), baseMarket, baseAmount);
         balanceOf[msg.sender][marketId] -= amount;
+        emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
         balanceOf[msg.sender][MarketId.fromToken(token)] += amount;
+        emit Transfer(msg.sender, address(0), msg.sender, MarketId.fromToken(token), amount);
         // TODO verify this is one sstore
         markets[marketId].exercised += amount;
         markets[marketId].remaining -= amount;
@@ -96,7 +107,9 @@ contract AmericanCallOptions is IERC6909 {
     function close(uint256 marketId, uint128 amount) external {
         markets[marketId].remaining -= amount;
         balanceOf[msg.sender][marketId] -= amount;
+        emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
         balanceOf[msg.sender][marketId.toTokenId()] += amount;
+        emit Transfer(msg.sender, address(0), msg.sender, marketId.toTokenId(), amount);
         lockedCollateral[msg.sender][marketId] -= amount;
     }
 
@@ -106,6 +119,7 @@ contract AmericanCallOptions is IERC6909 {
         lockedCollateral[msg.sender][marketId] -= amount;
         markets[marketId].remaining -= amount;
         balanceOf[msg.sender][MarketId.fromToken(token)] += amount;
+        emit Transfer(msg.sender, address(0), msg.sender, MarketId.fromToken(token), amount);
     }
 
     function acceptAssignment(uint256 marketId, uint128 amount) external {
@@ -113,6 +127,7 @@ contract AmericanCallOptions is IERC6909 {
         markets[marketId].exercised -= amount;
         uint256 baseAmount = strike.toBaseDown(amount);
         balanceOf[msg.sender][baseMarket] += baseAmount;
+        emit Transfer(msg.sender, address(0), msg.sender, baseMarket, amount);
         lockedCollateral[msg.sender][marketId] -= amount;
     }
 }
