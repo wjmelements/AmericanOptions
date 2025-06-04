@@ -12,6 +12,11 @@ This implements Call Options as IERC6909.
 ### MarketId
 The upper bits of the option market identifier indicate the price and the expiry.
 
+* token: 160 bits
+* timestamp: 24 bits
+* price: 72 bits
+
+
 When expiry and price are 0, that refers to the raw token balance, used as collateral to mint call options.
 This is safe because a market with expiry of zero cannot be created with `open` due to the expiry check.
 Therefore such a market cannot have positive `lockedCollateral` or `Market.remaining`.
@@ -26,6 +31,8 @@ Locked collateral could be transferred between accounts but I haven't implemente
 The bottom 16 bits of the expiry timestamp are shaved off.
 This restricts precision to an amount slightly less than a day.
 The benefit is increased price precision and longer lifetime.
+The timestamps would start to fail in the 37th millennium.
+Then we would need a new protocol.
 
 ### Price
 Price is a 72-bit square root ratio in [q32.40](https://en.wikipedia.org/wiki/Q_(number_format)), which I abbreviate as Q40 in the codebase.
