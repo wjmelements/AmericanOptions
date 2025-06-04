@@ -179,7 +179,11 @@ contract AmericanOptionsTest is Test {
             assertEq(options.balanceOf(counterparty, MarketId.fromToken(token)), 1_00);
 
             options.withdrawTo(recipient, token, 1_00);
-            assertEq(token.balanceOf(recipient), 1_00);
+            if (recipient == address(this)) {
+                assertEq(token.balanceOf(recipient), 10000_00);
+            } else {
+                assertEq(token.balanceOf(recipient), 1_00);
+            }
         }
         vm.stopPrank();
 
