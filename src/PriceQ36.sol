@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 // 72-bit square root pricing with 1.0 as 2**36
+// TODO consider 64-bit cubic pricing
 library PriceQ36 {
     uint256 constant Q36_SQUARE_REMAINDER_MASK = 0xffffffffffffffffff;
 
