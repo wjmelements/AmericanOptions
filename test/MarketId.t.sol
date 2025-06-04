@@ -1,6 +1,5 @@
 pragma solidity ^0.8.13;
 
-
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Test, console} from "forge-std/Test.sol";
 import {MarketId} from "../src/MarketId.sol";
@@ -9,6 +8,7 @@ import {TestUSD} from "./TestUSD.sol";
 
 contract AmericanOptionsTest is Test {
     TestUSD usd;
+
     using MarketId for uint256;
     using Expiry for uint256;
 
@@ -31,6 +31,6 @@ contract AmericanOptionsTest is Test {
         uint256 marketId = 0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef;
         (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
         uint256 marketIdDecoded = MarketId.pack(token, expiry, strike);
-        assertEq(marketIdDecoded, marketId); 
+        assertEq(marketIdDecoded, marketId);
     }
 }

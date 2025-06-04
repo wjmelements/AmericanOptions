@@ -14,9 +14,7 @@ contract AmericanOptionsTest is Test {
         options = new AmericanOptions(usd);
     }
 
-    function test_Increment() public {
-    }
+    function test_Increment() public {}
 
-    function testFuzz_SetNumber(uint256 x) public {
-    }
+    function testFuzz_SetNumber(uint256 x) public {}
 }

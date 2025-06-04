@@ -4,11 +4,11 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 contract TestUSD is IERC20 {
     uint256 public totalSupply;
-    mapping (address => uint256) public balanceOf;
-    mapping (address => mapping (address => uint256)) public allowance;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
     address immutable minter;
 
-    constructor () {
+    constructor() {
         minter = msg.sender;
     }
 
@@ -33,8 +33,8 @@ contract TestUSD is IERC20 {
         return true;
     }
 
-    modifier onlyMinter {
-        require (msg.sender == minter);
+    modifier onlyMinter() {
+        require(msg.sender == minter);
         _;
     }
 

@@ -11,6 +11,7 @@ library MarketId {
         expiry = (key & KEY_EXPIRY_MASK) >> 144;
         strike = key >> 184;
     }
+
     function pack(IERC20 token, uint256 expiry, uint256 strike) internal pure returns (uint256 key) {
         key = uint256(uint160(address(token))) | (expiry >> 16) << 160 | strike << 184;
     }
