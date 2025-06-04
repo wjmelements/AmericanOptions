@@ -52,6 +52,26 @@ contract AmericanOptionsTest is Test {
         assertEq(base.balanceOf(address(this)), 10000_00);
     }
 
+    function testFuzz_ApproveTransferFrom(address spender, address recipient) public {
+        assertTrue(options.approve(spender, MarketId.fromToken(base), 1_00));
+        assertEq(options.allowance(address(this), spender, MarketId.fromToken(base)), 1_00);
+
+        base.approve(address(options), 1_00);
+        options.depositTo(address(this), base, 1_00);
+        assertEq(base.balanceOf(address(this)), 9999_00);
+        assertEq(base.balanceOf(address(options)), 1_00);
+        assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 1_00);
+
+        vm.prank(spender);
+        options.transferFrom(address(this), recipient, MarketId.fromToken(base), 1_00);
+        assertEq(options.balanceOf(recipient, MarketId.fromToken(base)), 1_00);
+        assertEq(options.allowance(address(this), spender, MarketId.fromToken(base)), 0);
+
+        vm.prank(recipient);
+        options.withdrawTo(address(this), base, 1_00);
+        assertEq(base.balanceOf(address(this)), 10000_00);
+    }
+
     function test_DepositOpenCloseWithdraw() public {
         token.approve(address(options), 1_00);
         options.depositTo(address(this), token, 1_00);
