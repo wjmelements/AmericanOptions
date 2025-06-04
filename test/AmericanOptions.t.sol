@@ -99,9 +99,15 @@ contract AmericanOptionsTest is Test {
             uint256 marketId = MarketId.pack(token, expiry, strike);
             options.open(marketId, 1_00);
             assertEq(options.balanceOf(address(this), marketId), 1_00);
+            (uint128 remaining, uint128 exercised) = options.markets(marketId);
+            assertEq(remaining, 1_00);
+            assertEq(exercised, 0);
 
             options.close(marketId, 1_00);
             assertEq(options.balanceOf(address(this), marketId), 0);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 0);
+            assertEq(exercised, 0);
         }
 
         options.withdrawTo(address(this), token, 1_00);
@@ -119,6 +125,9 @@ contract AmericanOptionsTest is Test {
             uint256 strike = 48592008000;
             uint256 marketId = MarketId.pack(token, expiry, strike);
             options.open(marketId, 1_00);
+            (uint128 remaining, uint128 exercised) = options.markets(marketId);
+            assertEq(remaining, 1_00);
+            assertEq(exercised, 0);
             assertEq(options.balanceOf(address(this), marketId), 1_00);
 
             options.transfer(address(0), marketId, 1_00);
@@ -130,6 +139,9 @@ contract AmericanOptionsTest is Test {
             skip(2 * DAY);
 
             options.expire(marketId, 1_00);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 0);
+            assertEq(exercised, 0);
 
             vm.expectRevert();
             options.expire(marketId, 1_00);
@@ -156,9 +168,12 @@ contract AmericanOptionsTest is Test {
 
         uint256 strike = 1 << 41; // 4
         uint256 marketId = MarketId.pack(token, block.timestamp + DAY, strike);
-        options.open(marketId, 100);
+        options.open(marketId, 1_00);
         assertEq(options.balanceOf(address(this), marketId), 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(token)), 0);
+        (uint128 remaining, uint128 exercised) = options.markets(marketId);
+        assertEq(remaining, 1_00);
+        assertEq(exercised, 0);
 
         options.transfer(counterparty, marketId, 1_00);
         if (counterparty == address(this)) {
@@ -177,6 +192,9 @@ contract AmericanOptionsTest is Test {
             options.exercise(marketId, 1_00);
             assertEq(options.balanceOf(counterparty, MarketId.fromToken(base)), 0);
             assertEq(options.balanceOf(counterparty, MarketId.fromToken(token)), 1_00);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 0);
+            assertEq(exercised, 1_00);
 
             options.withdrawTo(recipient, token, 1_00);
             if (recipient == address(this)) {
@@ -193,6 +211,9 @@ contract AmericanOptionsTest is Test {
 
         options.acceptAssignment(marketId, 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 4_00);
+        (remaining, exercised) = options.markets(marketId);
+        assertEq(remaining, 0);
+        assertEq(exercised, 0);
 
         options.withdrawTo(recipient, base, 4_00);
         if (recipient == address(this)) {
