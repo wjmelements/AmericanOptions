@@ -22,7 +22,7 @@ contract AmericanOptionsTest is Test {
         options = new AmericanCallOptions(base);
     }
 
-    function test_DepositWithraw() public {
+    function test_DepositWithdraw() public {
         vm.expectRevert();
         options.depositTo(address(this), base, 1_00);
 
