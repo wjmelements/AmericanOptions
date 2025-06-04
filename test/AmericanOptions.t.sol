@@ -117,4 +117,47 @@ contract AmericanOptionsTest is Test {
         options.withdrawTo(address(this), token, 1_00);
         assertEq(token.balanceOf(address(this)), 10000_00);
     }
+
+    function testFuzz_OpenExerciseAcceptAssignment(address counterparty, address recipient) public {
+        token.approve(address(options), 1_00);
+        options.depositTo(address(this), token, 1_00);
+        assertEq(token.balanceOf(address(this)), 9999_00);
+        assertEq(token.balanceOf(address(options)), 1_00);
+        assertEq(options.balanceOf(address(this), MarketId.fromToken(token)), 1_00);
+
+        base.transfer(counterparty, 4_00);
+        assertEq(base.balanceOf(counterparty), 4_00);
+        assertEq(base.balanceOf(address(this)), 9996_00);
+
+        uint256 strike = 1 << 37; // 4
+        uint256 marketId = MarketId.pack(token, block.timestamp + DAY, strike);
+        options.open(marketId, 100);
+        assertEq(options.balanceOf(address(this), marketId), 1_00);
+        assertEq(options.balanceOf(address(this), MarketId.fromToken(token)), 0);
+
+        options.transfer(counterparty, marketId, 1_00);
+        assertEq(options.balanceOf(address(this), marketId), 0);
+        assertEq(options.balanceOf(counterparty, marketId), 1_00);
+
+        vm.startPrank(counterparty);
+        {
+            base.approve(address(options), 4_00);
+            options.depositTo(counterparty, base, 4_00);
+            assertEq(options.balanceOf(counterparty, MarketId.fromToken(base)), 4_00);
+
+            options.exercise(marketId, 1_00);
+            assertEq(options.balanceOf(counterparty, MarketId.fromToken(base)), 0);
+            assertEq(options.balanceOf(counterparty, MarketId.fromToken(token)), 1_00);
+
+            options.withdrawTo(recipient, token, 1_00);
+            assertEq(token.balanceOf(recipient), 1_00);
+        }
+        vm.stopPrank();
+
+        options.acceptAssignment(marketId, 1_00);
+        assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 4_00);
+
+        options.withdrawTo(recipient, base, 4_00);
+        assertEq(base.balanceOf(recipient), 4_00);
+    }
 }
