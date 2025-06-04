@@ -195,6 +195,10 @@ contract AmericanOptionsTest is Test {
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 4_00);
 
         options.withdrawTo(recipient, base, 4_00);
-        assertEq(base.balanceOf(recipient), 4_00);
+        if (recipient == address(this)) {
+            assertEq(base.balanceOf(recipient), 10000_00);
+        } else {
+            assertEq(base.balanceOf(recipient), 4_00);
+        }
     }
 }
