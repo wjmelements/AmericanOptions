@@ -2,14 +2,88 @@
 pragma solidity ^0.8.13;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IERC6909} from "forge-std/interfaces/IERC6909.sol";
 import {MarketId} from "./MarketId.sol";
+import {PriceQ36} from "./PriceQ36.sol";
 
-contract AmericanOptions {
+contract AmericanCallOptions { /*is IERC6909*/
     IERC20 private immutable base;
+    uint256 private immutable baseMarket;
+
+    constructor(IERC20 _base) {
+        base = _base;
+        baseMarket = MarketId.fromToken(_base);
+    }
 
     using MarketId for uint256;
+    using PriceQ36 for uint256;
 
-    constructor(IERC20 base_) {
-        base = base_;
+    // IERC69090
+    mapping(address => mapping(uint256 => uint256)) balanceOf;
+    mapping(address => mapping(address => mapping(uint256 => uint256))) allowance;
+    mapping(address => mapping(address => bool)) isOperator;
+
+    function depositTo(address recipient, IERC20 token, uint256 amount) external {
+        require(token.transferFrom(msg.sender, address(this), amount));
+        balanceOf[recipient][MarketId.fromToken(token)] += amount;
+    }
+
+    function withdrawTo(address recipient, IERC20 token, uint256 amount) external {
+        require(token.transfer(recipient, amount));
+        balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
+    }
+
+    // Markets
+    struct Market {
+        uint128 remaining;
+        uint128 exercised;
+    }
+    // can probably combine with balanceOf mapping
+
+    mapping(address => mapping(uint256 => uint128)) lockedCollateral;
+    mapping(uint256 => Market) markets;
+
+    function open(uint256 marketId, uint128 amount) external {
+        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
+        require(expiry >= block.timestamp);
+        balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
+        lockedCollateral[msg.sender][marketId] += amount;
+        balanceOf[msg.sender][marketId] += amount;
+        markets[marketId].remaining += amount;
+    }
+
+    function exercise(uint256 marketId, uint128 amount) external {
+        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
+        require(expiry >= block.timestamp);
+        uint256 baseAmount = strike.toBaseUp(amount);
+        balanceOf[msg.sender][baseMarket] -= baseAmount;
+        balanceOf[msg.sender][marketId] -= amount;
+        balanceOf[msg.sender][MarketId.fromToken(token)] += amount;
+        // TODO verify this is one sstore
+        markets[marketId].exercised += amount;
+        markets[marketId].remaining -= amount;
+    }
+
+    function close(uint256 marketId, uint128 amount) external {
+        markets[marketId].remaining -= amount;
+        balanceOf[msg.sender][marketId] -= amount;
+        balanceOf[msg.sender][marketId.toTokenId()] += amount;
+        lockedCollateral[msg.sender][marketId] -= amount;
+    }
+
+    function expire(uint256 marketId, uint128 amount) external {
+        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
+        require(expiry < block.timestamp);
+        lockedCollateral[msg.sender][marketId] -= amount;
+        markets[marketId].remaining -= amount;
+        balanceOf[msg.sender][MarketId.fromToken(token)] += amount;
+    }
+
+    function acceptAssignment(uint256 marketId, uint128 amount) external {
+        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
+        markets[marketId].exercised -= amount;
+        uint256 baseAmount = strike.toBaseDown(amount);
+        balanceOf[msg.sender][baseMarket] += baseAmount;
+        lockedCollateral[msg.sender][marketId] -= amount;
     }
 }

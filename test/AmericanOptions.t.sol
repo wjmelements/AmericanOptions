@@ -2,19 +2,29 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {AmericanOptions} from "../src/AmericanOptions.sol";
+import {AmericanCallOptions} from "../src/AmericanOptions.sol";
 import {TestUSD} from "./TestUSD.sol";
 
 contract AmericanOptionsTest is Test {
-    AmericanOptions public options;
+    AmericanCallOptions public options;
+    TestUSD base;
+    TestUSD token;
 
     function setUp() public {
-        TestUSD usd = new TestUSD();
-        usd.mint(10000_00);
-        options = new AmericanOptions(usd);
+        base = new TestUSD();
+        token = new TestUSD();
+        base.mint(10000_00);
+        token.mint(10000_00);
+
+        options = new AmericanCallOptions(base);
     }
 
-    function test_Increment() public {}
-
-    function testFuzz_SetNumber(uint256 x) public {}
+    function test_DepositWithraw() public {
+        base.approve(address(options), 1_00);
+        options.depositTo(address(this), base, 1_00);
+        assertEq(base.balanceOf(address(this)), 9999_00);
+        assertEq(base.balanceOf(address(options)), 1_00);
+        options.withdrawTo(address(this), base, 1_00);
+        assertEq(base.balanceOf(address(this)), 10000_00);
+    }
 }
