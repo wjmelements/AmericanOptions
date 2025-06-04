@@ -147,8 +147,12 @@ contract AmericanOptionsTest is Test {
         assertEq(options.balanceOf(address(this), MarketId.fromToken(token)), 1_00);
 
         base.transfer(counterparty, 4_00);
-        assertEq(base.balanceOf(counterparty), 4_00);
-        assertEq(base.balanceOf(address(this)), 9996_00);
+        if (counterparty == address(this)) {
+            assertEq(base.balanceOf(counterparty), 10000_00);
+        } else {
+            assertEq(base.balanceOf(counterparty), 4_00);
+            assertEq(base.balanceOf(address(this)), 9996_00);
+        }
 
         uint256 strike = 1 << 37; // 4
         uint256 marketId = MarketId.pack(token, block.timestamp + DAY, strike);
@@ -157,8 +161,12 @@ contract AmericanOptionsTest is Test {
         assertEq(options.balanceOf(address(this), MarketId.fromToken(token)), 0);
 
         options.transfer(counterparty, marketId, 1_00);
-        assertEq(options.balanceOf(address(this), marketId), 0);
-        assertEq(options.balanceOf(counterparty, marketId), 1_00);
+        if (counterparty == address(this)) {
+            assertEq(options.balanceOf(address(this), marketId), 1_00);
+        } else {
+            assertEq(options.balanceOf(address(this), marketId), 0);
+            assertEq(options.balanceOf(counterparty, marketId), 1_00);
+        }
 
         vm.startPrank(counterparty);
         {
