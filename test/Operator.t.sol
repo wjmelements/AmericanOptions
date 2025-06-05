@@ -284,6 +284,22 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(remaining, 0);
             assertEq(exercised, 1000_00);
 
+            operatorAlice.reverseExercise(marketId, 200_00);
+            assertEq(options.balanceOf(alice, marketId), 200_00);
+            assertEq(token.balanceOf(alice), 800_00);
+            assertEq(base.balanceOf(alice), 1800_00);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 200_00);
+            assertEq(exercised, 800_00);
+
+            operatorAlice.exerciseAll(marketId);
+            assertEq(options.balanceOf(alice, marketId), 0);
+            assertEq(token.balanceOf(alice), 1000_00);
+            assertEq(base.balanceOf(alice), 0);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 0);
+            assertEq(exercised, 1000_00);
+
             operatorAlice.closePositionPreferringCollateral(marketId);
             assertEq(token.balanceOf(alice), 1000_00);
             assertEq(base.balanceOf(alice), 9000_00);
