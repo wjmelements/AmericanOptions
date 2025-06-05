@@ -18,23 +18,34 @@ contract AmericanCallOptions is IERC6909 {
     using MarketId for uint256;
     using PriceQ40 for uint256;
 
-    // IERC69090
+    /// @inheritdoc IERC6909
     mapping(address => mapping(uint256 => uint256)) public balanceOf;
+    /// @inheritdoc IERC6909
     mapping(address => mapping(address => mapping(uint256 => uint256))) public allowance;
+    /// @inheritdoc IERC6909
     mapping(address => mapping(address => bool)) public isOperator;
 
+    /// @notice Deposit tokens into the protocol
+    /// @param recipient who to credit
+    /// @param token the token to deposit
+    /// @param amount how many tokens
     function depositTo(address recipient, IERC20 token, uint256 amount) external {
         require(token.transferFrom(msg.sender, address(this), amount));
         balanceOf[recipient][MarketId.fromToken(token)] += amount;
         emit Transfer(msg.sender, address(0), recipient, MarketId.fromToken(token), amount);
     }
 
+    /// @notice Withdraw tokens from the protocol
+    /// @param recipient who receives the tokens
+    /// @param token the token to withdraw
+    /// @param amount how many tokens
     function withdrawTo(address recipient, IERC20 token, uint256 amount) external {
         require(token.transfer(recipient, amount));
         balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
         emit Transfer(msg.sender, recipient, address(0), MarketId.fromToken(token), amount);
     }
 
+    /// @inheritdoc IERC6909
     function transfer(address recipient, uint256 id, uint256 amount) external returns (bool) {
         balanceOf[msg.sender][id] -= amount;
         balanceOf[recipient][id] += amount;
@@ -42,6 +53,7 @@ contract AmericanCallOptions is IERC6909 {
         return true;
     }
 
+    /// @inheritdoc IERC6909
     function transferFrom(address owner, address recipient, uint256 id, uint256 amount) external returns (bool) {
         if (!isOperator[owner][msg.sender]) {
             allowance[owner][msg.sender][id] -= amount;
@@ -52,18 +64,21 @@ contract AmericanCallOptions is IERC6909 {
         return true;
     }
 
+    /// @inheritdoc IERC6909
     function setOperator(address spender, bool approved) external returns (bool) {
         isOperator[msg.sender][spender] = approved;
         emit OperatorSet(msg.sender, spender, approved);
         return true;
     }
 
+    /// @inheritdoc IERC6909
     function approve(address spender, uint256 id, uint256 amount) external returns (bool) {
         allowance[msg.sender][spender][id] = amount;
         emit Approval(msg.sender, spender, id, amount);
         return true;
     }
 
+    /// @inheritdoc IERC6909
     function supportsInterface(bytes4 interfaceId) public pure returns (bool supported) {
         return interfaceId == 0x0f632fb3 || interfaceId == 0x01ffc9a7;
     }
@@ -133,7 +148,7 @@ contract AmericanCallOptions is IERC6909 {
         emit Transfer(msg.sender, address(0), msg.sender, MarketId.fromToken(token), amount);
     }
 
-    /// @notice Converts locked collateral into base tokens at the strike price
+    /// @notice Convert locked collateral into base tokens at the strike price
     /// @param marketId specifying the call's token, expiration, and strike price
     /// @param amount locked collateral to release
     function acceptAssignment(uint256 marketId, uint128 amount) external {
