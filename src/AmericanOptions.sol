@@ -135,9 +135,12 @@ contract AmericanCallOptions is IERC6909 {
     /// @param amount collateral tokens to release
     function close(uint256 marketId, uint128 amount) external {
         markets[marketId].remaining -= amount;
-        balanceOf[msg.sender][marketId] -= amount;
+        {
+            mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
+            balances[marketId] -= amount;
+            balances[marketId.toTokenId()] += amount;
+        }
         emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
-        balanceOf[msg.sender][marketId.toTokenId()] += amount;
         emit Transfer(msg.sender, address(0), msg.sender, marketId.toTokenId(), amount);
         lockedCollateral[msg.sender][marketId] -= amount;
     }
