@@ -30,7 +30,7 @@ Locked collateral could be transferred between accounts but I haven't implemente
 ### Timestamp
 The bottom 16 bits of the expiry timestamp are shaved off.
 This restricts precision to an amount slightly less than a day.
-The benefit is increased price precision and longer lifetime.
+The benefits are increased price precision, longer lifetime, and less liquidity fragmentation.
 The timestamps would start to fail in the 37th millennium.
 Then we would need a new protocol.
 
