@@ -23,6 +23,8 @@ contract AmericanOptions7702Operator {
         _;
     }
 
+    /// @notice Lock all of your loose tokens into this market and write call options against them
+    /// @param marketId specifying the call's token, expiration, and strike price
     function depositAllAndOpen(uint256 marketId) external onlySelf {
         IERC20 token = marketId.toToken();
         uint256 balance = token.balanceOf(msg.sender);
@@ -31,6 +33,8 @@ contract AmericanOptions7702Operator {
         options.open(marketId, uint128(balance));
     }
 
+    /// @notice Exercise all of your calls, purchasing an equal amount of collateral at the strike price
+    /// @param marketId specifying the call's token, expiration, and strike price
     function exerciseAll(uint256 marketId) external onlySelf {
         uint256 balance = options.balanceOf(msg.sender, marketId);
         uint256 cost = marketId.toStrike().toBaseUp(balance);
@@ -40,6 +44,9 @@ contract AmericanOptions7702Operator {
         options.withdrawTo(msg.sender, marketId.toToken(), balance);
     }
 
+    /// @notice Sell collateral at the strike price, also receiving an equal number of calls
+    /// @param marketId specifying the call's token, expiration, and strike price
+    /// @param maximum the maximum collateral amount to sell
     function reverseExercise(uint256 marketId, uint128 maximum) external onlySelf {
         ( /*uint128 remaining*/ , uint128 exercised) = options.markets(marketId);
         if (maximum < exercised) {
@@ -53,8 +60,10 @@ contract AmericanOptions7702Operator {
         options.withdrawTo(msg.sender, baseToken, marketId.toStrike().toBaseDown(exercised));
     }
 
-    // NOTE closePosition does the onlySelf check
+    /// @notice Unlock all collateral as base tokens, receiving the rest as-is
+    /// @param marketId specifying the call's token, expiration, and strike price
     function closePositionPreferringAssignment(uint256 marketId) external {
+        // NOTE closePosition does the onlySelf check
         uint128 locked = options.lockedCollateral(msg.sender, marketId);
         (uint128 expired, uint128 exercised) = options.markets(marketId);
         if (exercised > 0) {
@@ -70,8 +79,10 @@ contract AmericanOptions7702Operator {
         closePosition(marketId, expired, exercised);
     }
 
-    // NOTE closePosition does the onlySelf check
+    /// @notice Unlock all collateral as-is, receiving the rest as base tokens
+    /// @param marketId specifying the call's token, expiration, and strike price
     function closePositionPreferringCollateral(uint256 marketId) external {
+        // NOTE closePosition does the onlySelf check
         uint128 locked = options.lockedCollateral(msg.sender, marketId);
         (uint128 expired, uint128 exercised) = options.markets(marketId);
         if (expired > 0) {
@@ -87,6 +98,10 @@ contract AmericanOptions7702Operator {
         closePosition(marketId, expired, exercised);
     }
 
+    /// @notice Unlock locked collateral
+    /// @param marketId specifying the call's token, expiration, and strike price
+    /// @param expired collateral amount to receive as collateral
+    /// @param exercised collateral amount to accept as base tokens
     function closePosition(uint256 marketId, uint128 expired, uint128 exercised) public onlySelf {
         if (expired > 0) {
             options.expire(marketId, expired);
