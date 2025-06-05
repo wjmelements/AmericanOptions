@@ -22,6 +22,22 @@ contract AmericanOptionsTest is Test {
         options = new AmericanCallOptions(base);
     }
 
+    function test_WithdrawInsufficientBalance() public {
+        base.approve(address(options), 10000_00);
+        options.depositTo(address(this), base, 10000_00);
+
+        vm.expectRevert();
+        options.withdrawTo(address(this), base, 10000_01);
+
+        options.withdrawTo(address(this), base, 10000_00);
+    }
+
+    function test_SupportsInterface() public view {
+        assertTrue(options.supportsInterface(0x0f632fb3));
+        assertTrue(options.supportsInterface(0x01ffc9a7));
+        assertFalse(options.supportsInterface(0x11ffc9a7));
+    }
+
     function test_DepositWithdraw() public {
         vm.expectRevert();
         options.depositTo(address(this), base, 1_00);
