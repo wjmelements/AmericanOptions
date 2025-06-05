@@ -45,7 +45,7 @@ contract AmericanOptions7702OperatorTest is Test {
         operatorAlice.depositAllAndOpen(marketId);
     }
 
-    function test_CloseExpiredPreferringCollateralNoneExercised() public {
+    function test_CloseExpiredPreferringCollateral_NoneExercised() public {
         assertEq(token.balanceOf(alice), 1000_00);
         vm.startPrank(alice);
         {
@@ -67,7 +67,7 @@ contract AmericanOptions7702OperatorTest is Test {
         vm.stopPrank();
     }
 
-    function test_CloseExpiredPreferringCollateralAllExercised(address purchaser) public {
+    function testFuzz_CloseExpiredPreferringCollateral_AllExercised(address purchaser) public {
         assertEq(token.balanceOf(alice), 1000_00);
 
         uint256 expiry = block.timestamp + 7 * DAY;
