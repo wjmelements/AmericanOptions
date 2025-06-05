@@ -20,11 +20,11 @@ contract AmericanCallOptions is IERC6909 {
     using PriceQ40 for uint256;
 
     /// @inheritdoc IERC6909
-    mapping(address => mapping(uint256 => uint256)) public balanceOf;
+    mapping(address account => mapping(uint256 marketId => uint256)) public balanceOf;
     /// @inheritdoc IERC6909
-    mapping(address => mapping(address => mapping(uint256 => uint256))) public allowance;
+    mapping(address owner => mapping(address spender => mapping(uint256 marketId => uint256))) public allowance;
     /// @inheritdoc IERC6909
-    mapping(address => mapping(address => bool)) public isOperator;
+    mapping(address owner => mapping(address spender => bool)) public isOperator;
 
     /// @notice Deposit tokens into the protocol
     /// @param recipient who to credit
@@ -89,10 +89,9 @@ contract AmericanCallOptions is IERC6909 {
         uint128 remaining;
         uint128 exercised;
     }
-    // can probably combine with balanceOf mapping
 
-    mapping(address => mapping(uint256 => uint128)) public lockedCollateral;
-    mapping(uint256 => Market) public markets;
+    mapping(address owner => mapping(uint256 marketId => uint128)) public lockedCollateral;
+    mapping(uint256 marketId => Market) public markets;
 
     /// @notice Lock tokens to write call options
     /// @param marketId specifying the call's token, expiration, and strike price
