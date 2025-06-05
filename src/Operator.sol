@@ -54,6 +54,7 @@ contract AmericanOptions7702Operator {
         options.withdrawTo(msg.sender, baseToken, strike.toBaseDown(exercised));
     }
 
+    // NOTE closePosition does the onlySelf check
     function closeAndWithdrawExpiredPositionPreferringAssignment(uint256 marketId) external {
         uint128 locked = options.lockedCollateral(msg.sender, marketId);
         (uint128 expired, uint128 exercised) = options.markets(marketId);
@@ -70,6 +71,7 @@ contract AmericanOptions7702Operator {
         closePosition(marketId, expired, exercised);
     }
 
+    // NOTE closePosition does the onlySelf check
     function closeAndWithdrawExpiredPositionPreferringCollateral(uint256 marketId) external {
         uint128 locked = options.lockedCollateral(msg.sender, marketId);
         (uint128 expired, uint128 exercised) = options.markets(marketId);
