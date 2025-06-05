@@ -45,7 +45,7 @@ contract AmericanOptions7702OperatorTest is Test {
         operatorAlice.depositAllAndOpen(marketId);
 
         vm.expectRevert();
-        operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+        operatorAlice.closePositionPreferringCollateral(marketId);
 
         vm.expectRevert();
         operatorAlice.exerciseAll(marketId);
@@ -54,7 +54,7 @@ contract AmericanOptions7702OperatorTest is Test {
         operatorAlice.reverseExercise(marketId, 0);
 
         vm.expectRevert();
-        operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+        operatorAlice.closePositionPreferringCollateral(marketId);
 
         vm.expectRevert();
         operatorAlice.closePosition(marketId, 0, 0);
@@ -74,16 +74,16 @@ contract AmericanOptions7702OperatorTest is Test {
 
             vm.expectRevert();
             if (preferCollateral) {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+                operatorAlice.closePositionPreferringCollateral(marketId);
             } else {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+                operatorAlice.closePositionPreferringAssignment(marketId);
             }
 
             skip(7 * DAY);
             if (preferCollateral) {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+                operatorAlice.closePositionPreferringCollateral(marketId);
             } else {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+                operatorAlice.closePositionPreferringAssignment(marketId);
             }
             assertEq(token.balanceOf(alice), 1000_00);
         }
@@ -106,9 +106,9 @@ contract AmericanOptions7702OperatorTest is Test {
 
             vm.expectRevert();
             if (preferCollateral) {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+                operatorAlice.closePositionPreferringCollateral(marketId);
             } else {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+                operatorAlice.closePositionPreferringAssignment(marketId);
             }
 
             options.transfer(purchaser, marketId, 1000_00);
@@ -144,9 +144,9 @@ contract AmericanOptions7702OperatorTest is Test {
         {
             skip(7 * DAY);
             if (preferCollateral) {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+                operatorAlice.closePositionPreferringCollateral(marketId);
             } else {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+                operatorAlice.closePositionPreferringAssignment(marketId);
             }
             assertEq(base.balanceOf(alice), 250_00);
         }
@@ -168,9 +168,9 @@ contract AmericanOptions7702OperatorTest is Test {
 
             vm.expectRevert();
             if (preferCollateral) {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+                operatorAlice.closePositionPreferringCollateral(marketId);
             } else {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+                operatorAlice.closePositionPreferringAssignment(marketId);
             }
 
             options.transfer(purchaser, marketId, 1000_00);
@@ -206,9 +206,9 @@ contract AmericanOptions7702OperatorTest is Test {
         {
             skip(7 * DAY);
             if (preferCollateral) {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+                operatorAlice.closePositionPreferringCollateral(marketId);
             } else {
-                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+                operatorAlice.closePositionPreferringAssignment(marketId);
             }
             assertEq(base.balanceOf(alice), 125_00);
             assertEq(token.balanceOf(alice), 500_00);
@@ -233,7 +233,7 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(token.balanceOf(alice), 1000_00);
             assertEq(base.balanceOf(alice), 4000_00);
 
-            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            operatorAlice.closePositionPreferringCollateral(marketId);
             assertEq(token.balanceOf(alice), 1000_00);
             assertEq(base.balanceOf(alice), 4100000_00);
         }
@@ -284,7 +284,7 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(remaining, 0);
             assertEq(exercised, 1000_00);
 
-            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            operatorAlice.closePositionPreferringCollateral(marketId);
             assertEq(token.balanceOf(alice), 1000_00);
             assertEq(base.balanceOf(alice), 9000_00);
             (remaining, exercised) = options.markets(marketId);
