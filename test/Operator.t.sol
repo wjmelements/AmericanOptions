@@ -100,8 +100,12 @@ contract AmericanOptions7702OperatorTest is Test {
             operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
 
             options.transfer(purchaser, marketId, 1000_00);
-            assertEq(options.balanceOf(purchaser, marketId), 1000_00);
-            assertEq(options.balanceOf(alice, marketId), 0);
+            if (alice != purchaser) {
+                assertEq(options.balanceOf(purchaser, marketId), 1000_00);
+                assertEq(options.balanceOf(alice, marketId), 0);
+            } else {
+                assertEq(options.balanceOf(purchaser, marketId), 1000_00);
+            }
         }
         vm.stopPrank();
 
