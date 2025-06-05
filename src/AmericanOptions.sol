@@ -156,7 +156,7 @@ contract AmericanCallOptions is IERC6909 {
         markets[marketId].exercised -= amount;
         uint256 baseAmount = strike.toBaseDown(amount);
         balanceOf[msg.sender][baseMarket] += baseAmount;
-        emit Transfer(msg.sender, address(0), msg.sender, baseMarket, amount);
+        emit Transfer(msg.sender, address(0), msg.sender, baseMarket, baseAmount);
         lockedCollateral[msg.sender][marketId] -= amount;
     }
 }
