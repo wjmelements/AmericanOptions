@@ -60,7 +60,7 @@ contract AmericanOptions7702OperatorTest is Test {
         operatorAlice.closePosition(marketId, 0, 0);
     }
 
-    function test_CloseExpiredPreferringCollateral_NoneExercised() public {
+    function testFuzz_ClosePosition_NoneExercised(bool preferCollateral) public {
         assertEq(token.balanceOf(alice), 1000_00);
         vm.startPrank(alice);
         {
@@ -73,16 +73,24 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(token.balanceOf(address(options)), 1000_00);
 
             vm.expectRevert();
-            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            if (preferCollateral) {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            } else {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+            }
 
             skip(7 * DAY);
-            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            if (preferCollateral) {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            } else {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+            }
             assertEq(token.balanceOf(alice), 1000_00);
         }
         vm.stopPrank();
     }
 
-    function testFuzz_CloseExpiredPreferringCollateral_AllExercised(address purchaser) public {
+    function testFuzz_ClosePosition_AllExercised(address purchaser, bool preferCollateral) public {
         assertEq(token.balanceOf(alice), 1000_00);
 
         uint256 expiry = block.timestamp + 7 * DAY;
@@ -97,7 +105,11 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(options.balanceOf(alice, marketId), 1000_00);
 
             vm.expectRevert();
-            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            if (preferCollateral) {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            } else {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+            }
 
             options.transfer(purchaser, marketId, 1000_00);
             if (alice != purchaser) {
@@ -131,12 +143,16 @@ contract AmericanOptions7702OperatorTest is Test {
         vm.startPrank(alice);
         {
             skip(7 * DAY);
-            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            if (preferCollateral) {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            } else {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+            }
             assertEq(base.balanceOf(alice), 250_00);
         }
     }
 
-    function testFuzz_CloseExpiredPreferringCollateral_HalfExercised(address purchaser) public {
+    function testFuzz_ClosePosition_HalfExercised(address purchaser, bool preferCollateral) public {
         assertEq(token.balanceOf(alice), 1000_00);
 
         uint256 expiry = block.timestamp + 7 * DAY;
@@ -151,7 +167,11 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(options.balanceOf(alice, marketId), 1000_00);
 
             vm.expectRevert();
-            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            if (preferCollateral) {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            } else {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+            }
 
             options.transfer(purchaser, marketId, 1000_00);
             if (purchaser != alice) {
@@ -185,7 +205,11 @@ contract AmericanOptions7702OperatorTest is Test {
         vm.startPrank(alice);
         {
             skip(7 * DAY);
-            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            if (preferCollateral) {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            } else {
+                operatorAlice.closeAndWithdrawExpiredPositionPreferringAssignment(marketId);
+            }
             assertEq(base.balanceOf(alice), 125_00);
             assertEq(token.balanceOf(alice), 500_00);
         }
