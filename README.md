@@ -1,6 +1,6 @@
 ## AmericanCallOptions
 
-This implements Call Options as IERC6909.
+This implements [American-Style](https://en.wikipedia.org/wiki/Option_style) Call Options as IERC6909.
 
 ### Operations
 * **open**: lock your collateral and mint call options
