@@ -23,8 +23,8 @@ contract AmericanOptions7702OperatorTest is Test {
     function setUp() public {
         base = new TestUSD();
         token = new TestUSD();
-        base.mint(10000_00);
-        token.mint(10000_00);
+        base.mint(5000000_00);
+        token.mint(500000_00);
 
         options = new AmericanCallOptions(base);
         operator = new AmericanOptions7702Operator(options);
@@ -43,6 +43,12 @@ contract AmericanOptions7702OperatorTest is Test {
 
         vm.expectRevert();
         operatorAlice.depositAllAndOpen(marketId);
+
+        vm.expectRevert();
+        operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+
+        vm.expectRevert();
+        operatorAlice.exerciseAll(marketId);
     }
 
     function test_CloseExpiredPreferringCollateral_NoneExercised() public {
@@ -166,5 +172,29 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(base.balanceOf(alice), 125_00);
             assertEq(token.balanceOf(alice), 500_00);
         }
+    }
+
+    function test_exerciseAll() public {
+        base.transfer(alice, 4100000_00);
+
+        uint256 expiry = block.timestamp + 1 * DAY;
+        uint256 strike = 1 << 46; // 4096
+        uint256 marketId = MarketId.pack(token, expiry, strike);
+
+        vm.startPrank(alice);
+        {
+            operatorAlice.depositAllAndOpen(marketId);
+            assertEq(token.balanceOf(alice), 0);
+            assertEq(options.balanceOf(alice, marketId), 1000_00);
+
+            operatorAlice.exerciseAll(marketId);
+            assertEq(token.balanceOf(alice), 1000_00);
+            assertEq(base.balanceOf(alice), 4000_00);
+
+            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            assertEq(token.balanceOf(alice), 1000_00);
+            assertEq(base.balanceOf(alice), 4100000_00);
+        }
+        vm.stopPrank();
     }
 }
