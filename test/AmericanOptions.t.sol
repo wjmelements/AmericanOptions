@@ -3,8 +3,9 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {AmericanCallOptions} from "../src/AmericanOptions.sol";
-import {TestUSD} from "./TestUSD.sol";
 import {MarketId} from "../src/MarketId.sol";
+import {FalseToken} from "./FalseToken.sol";
+import {TestUSD} from "./TestUSD.sol";
 
 contract AmericanOptionsTest is Test {
     AmericanCallOptions public options;
@@ -30,6 +31,18 @@ contract AmericanOptionsTest is Test {
         options.withdrawTo(address(this), base, 10000_01);
 
         options.withdrawTo(address(this), base, 10000_00);
+    }
+
+    function test_DepositAndWithdrawFailIfTokenReturnsFalse() public {
+        FalseToken falseToken = new FalseToken();
+        falseToken.mint(10000_00);
+        falseToken.approve(address(options), 10000_00);
+
+        vm.expectRevert();
+        options.depositTo(address(this), falseToken, 0);
+
+        vm.expectRevert();
+        options.withdrawTo(address(this), falseToken, 0);
     }
 
     function test_SupportsInterface() public view {
