@@ -152,7 +152,7 @@ contract AmericanCallOptions is IERC6909 {
     /// @param marketId specifying the call's token, expiration, and strike price
     /// @param amount locked collateral to release
     function acceptAssignment(uint256 marketId, uint128 amount) external {
-        ( /*IERC20 token*/ , /*uint256 expiry*/, uint256 strike) = marketId.unpack();
+        uint256 strike = marketId.toStrike();
         markets[marketId].exercised -= amount;
         uint256 baseAmount = strike.toBaseDown(amount);
         balanceOf[msg.sender][baseMarket] += baseAmount;

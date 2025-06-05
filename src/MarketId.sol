@@ -19,6 +19,10 @@ library MarketId {
         key = uint256(uint160(address(token))) | (expiry >> 16) << 160 | strike << 184;
     }
 
+    function toStrike(uint256 key) internal pure returns (uint256 strike) {
+        return key >> 184;
+    }
+
     function fromToken(IERC20 token) internal pure returns (uint256 key) {
         key = uint256(uint160(address(token)));
     }
