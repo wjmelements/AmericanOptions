@@ -99,11 +99,9 @@ contract AmericanCallOptions is IERC6909 {
     function open(uint256 marketId, uint128 amount) external {
         (uint256 tokenId, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
         require(expiry >= block.timestamp);
-        {
-            mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
-            balances[tokenId] -= amount;
-            balances[marketId] += amount;
-        }
+        mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
+        balances[tokenId] -= amount;
+        balances[marketId] += amount;
         emit Transfer(msg.sender, msg.sender, address(0), tokenId, amount);
         lockedCollateral[msg.sender][marketId] += amount;
         emit Transfer(msg.sender, address(0), msg.sender, marketId, amount);
@@ -117,12 +115,10 @@ contract AmericanCallOptions is IERC6909 {
         (uint256 tokenId, uint256 expiry, uint256 strike) = marketId.unpack();
         require(expiry >= block.timestamp);
         uint256 baseAmount = strike.toBaseUp(amount);
-        {
-            mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
-            balances[baseMarket] -= baseAmount;
-            balances[marketId] -= amount;
-            balances[tokenId] += amount;
-        }
+        mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
+        balances[baseMarket] -= baseAmount;
+        balances[marketId] -= amount;
+        balances[tokenId] += amount;
         emit Transfer(msg.sender, msg.sender, address(0), baseMarket, baseAmount);
         emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
         emit Transfer(msg.sender, address(0), msg.sender, tokenId, amount);
@@ -136,11 +132,9 @@ contract AmericanCallOptions is IERC6909 {
     /// @param amount collateral tokens to release
     function close(uint256 marketId, uint128 amount) external {
         markets[marketId].remaining -= amount;
-        {
-            mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
-            balances[marketId] -= amount;
-            balances[marketId.toTokenId()] += amount;
-        }
+        mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
+        balances[marketId] -= amount;
+        balances[marketId.toTokenId()] += amount;
         emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
         emit Transfer(msg.sender, address(0), msg.sender, marketId.toTokenId(), amount);
         lockedCollateral[msg.sender][marketId] -= amount;
