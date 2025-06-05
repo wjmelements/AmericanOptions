@@ -65,6 +65,7 @@ $ forge build
 
 ```shell
 $ forge test
+$ forge coverage
 ```
 
 ### Format
