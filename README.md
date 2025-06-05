@@ -46,8 +46,12 @@ There are some flaws to this.
 
 If a call was executed and then the value of the token decreases, an unrelated party can mint new calls and redeem them into the base token.
 This has the net effect of reversing a call exercise.
+See `Operator.reverseExercise`;
 
 Another flaw is that the first to exit are favored over the last to exit, because they may have a choice between claiming the collateral and claiming the base token.
+
+## Operator
+The Operator is a sample 7702 delegation specialized for options trading that can perform several common batched operations.
 
 ## Usage
 

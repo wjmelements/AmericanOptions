@@ -41,6 +41,19 @@ contract AmericanOptions7702Operator {
         options.withdrawTo(msg.sender, token, balance);
     }
 
+    function reverseExercise(uint256 marketId, uint128 maximum) external onlySelf {
+        ( /*uint128 remaining*/ , uint128 exercised) = options.markets(marketId);
+        if (maximum < exercised) {
+            exercised = maximum;
+        }
+        (IERC20 token, /*uint256 expiry*/, uint256 strike) = marketId.unpack();
+        token.approve(address(options), exercised);
+        options.depositTo(msg.sender, token, exercised);
+        options.open(marketId, exercised);
+        options.acceptAssignment(marketId, exercised);
+        options.withdrawTo(msg.sender, baseToken, strike.toBaseDown(exercised));
+    }
+
     function closeAndWithdrawExpiredPositionPreferringCollateral(uint256 marketId) external onlySelf {
         uint128 locked = options.lockedCollateral(msg.sender, marketId);
         (uint128 remaining, uint128 exercised) = options.markets(marketId);

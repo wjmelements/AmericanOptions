@@ -192,12 +192,67 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(options.balanceOf(alice, marketId), 1000_00);
 
             operatorAlice.exerciseAll(marketId);
+            assertEq(options.balanceOf(alice, marketId), 0);
             assertEq(token.balanceOf(alice), 1000_00);
             assertEq(base.balanceOf(alice), 4000_00);
 
             operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
             assertEq(token.balanceOf(alice), 1000_00);
             assertEq(base.balanceOf(alice), 4100000_00);
+        }
+        vm.stopPrank();
+    }
+
+    function test_reverseExercise() public {
+        base.transfer(alice, 9000_00);
+
+        uint256 expiry = block.timestamp + 1 * DAY;
+        uint256 strike = 3 << 40; // 9
+        uint256 marketId = MarketId.pack(token, expiry, strike);
+
+        (uint128 remaining, uint128 exercised) = options.markets(marketId);
+        assertEq(remaining, 0);
+        assertEq(exercised, 0);
+
+        vm.startPrank(alice);
+        {
+            operatorAlice.depositAllAndOpen(marketId);
+            assertEq(token.balanceOf(alice), 0);
+            assertEq(options.balanceOf(alice, marketId), 1000_00);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 1000_00);
+            assertEq(exercised, 0);
+
+            operatorAlice.exerciseAll(marketId);
+            assertEq(options.balanceOf(alice, marketId), 0);
+            assertEq(token.balanceOf(alice), 1000_00);
+            assertEq(base.balanceOf(alice), 0);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 0);
+            assertEq(exercised, 1000_00);
+
+            operatorAlice.reverseExercise(marketId, 1000_00);
+            assertEq(options.balanceOf(alice, marketId), 1000_00);
+            assertEq(token.balanceOf(alice), 0);
+            assertEq(base.balanceOf(alice), 9000_00);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 1000_00);
+            assertEq(exercised, 0);
+
+            operatorAlice.exerciseAll(marketId);
+            assertEq(options.balanceOf(alice, marketId), 0);
+            assertEq(token.balanceOf(alice), 1000_00);
+            assertEq(base.balanceOf(alice), 0);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 0);
+            assertEq(exercised, 1000_00);
+
+            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            assertEq(token.balanceOf(alice), 1000_00);
+            assertEq(base.balanceOf(alice), 9000_00);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 0);
+            assertEq(exercised, 0);
         }
         vm.stopPrank();
     }
