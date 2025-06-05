@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import {Test} from "forge-std/Test.sol";
+import {AmericanCallOptions} from "../src/AmericanOptions.sol";
+import {MarketId} from "../src/MarketId.sol";
+import {AmericanOptions7702Operator} from "../src/Operator.sol";
+import {TestUSD} from "./TestUSD.sol";
+
+contract AmericanOptions7702OperatorTest is Test {
+    TestUSD base;
+    TestUSD token;
+    AmericanCallOptions options;
+    AmericanOptions7702Operator operator;
+    address alice;
+    uint256 aliceKey;
+    AmericanOptions7702Operator operatorAlice;
+
+    using MarketId for uint256;
+
+    uint256 constant DAY = 24 * 60 * 60;
+
+    function setUp() public {
+        base = new TestUSD();
+        token = new TestUSD();
+        base.mint(10000_00);
+        token.mint(10000_00);
+
+        options = new AmericanCallOptions(base);
+        operator = new AmericanOptions7702Operator(options);
+
+        (alice, aliceKey) = makeAddrAndKey("alice");
+        // eip 7702: set delegate to operator
+        vm.signAndAttachDelegation(address(operator), aliceKey);
+        token.transfer(alice, 1000_00);
+        operatorAlice = AmericanOptions7702Operator(alice);
+    }
+
+    function test_PreventsPublicUse() public {
+        uint256 expiry = block.timestamp + 7 * DAY;
+        uint256 strike = 1 << 39; // 1/4
+        uint256 marketId = MarketId.pack(token, expiry, strike);
+
+        vm.expectRevert();
+        operatorAlice.depositAllAndOpen(marketId);
+    }
+
+    function test_CloseExpiredPreferringCollateralNoneExercised() public {
+        assertEq(token.balanceOf(alice), 1000_00);
+        vm.startPrank(alice);
+        {
+            uint256 expiry = block.timestamp + 7 * DAY;
+            uint256 strike = 1 << 39; // 1/4
+            uint256 marketId = MarketId.pack(token, expiry, strike);
+
+            operatorAlice.depositAllAndOpen(marketId);
+            assertEq(token.balanceOf(alice), 0);
+            assertEq(token.balanceOf(address(options)), 1000_00);
+
+            vm.expectRevert();
+            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+
+            skip(7 * DAY);
+            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            assertEq(token.balanceOf(alice), 1000_00);
+        }
+        vm.stopPrank();
+    }
+}

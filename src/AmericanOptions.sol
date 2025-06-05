@@ -7,11 +7,11 @@ import {MarketId} from "./MarketId.sol";
 import {PriceQ40} from "./PriceQ40.sol";
 
 contract AmericanCallOptions is IERC6909 {
-    IERC20 private immutable base;
+    IERC20 public immutable baseToken;
     uint256 private immutable baseMarket;
 
     constructor(IERC20 _base) {
-        base = _base;
+        baseToken = _base;
         baseMarket = MarketId.fromToken(_base);
     }
 
