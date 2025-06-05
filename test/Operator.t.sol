@@ -116,4 +116,55 @@ contract AmericanOptions7702OperatorTest is Test {
             assertEq(base.balanceOf(alice), 250_00);
         }
     }
+
+    function testFuzz_CloseExpiredPreferringCollateral_HalfExercised(address purchaser) public {
+        assertEq(token.balanceOf(alice), 1000_00);
+
+        uint256 expiry = block.timestamp + 7 * DAY;
+        uint256 strike = 1 << 39; // 1/4
+        uint256 marketId = MarketId.pack(token, expiry, strike);
+
+        vm.startPrank(alice);
+        {
+            operatorAlice.depositAllAndOpen(marketId);
+            assertEq(token.balanceOf(alice), 0);
+            assertEq(token.balanceOf(address(options)), 1000_00);
+            assertEq(options.balanceOf(alice, marketId), 1000_00);
+
+            vm.expectRevert();
+            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+
+            options.transfer(purchaser, marketId, 1000_00);
+            assertEq(options.balanceOf(purchaser, marketId), 1000_00);
+            assertEq(options.balanceOf(alice, marketId), 0);
+        }
+        vm.stopPrank();
+
+        (uint128 remaining, uint128 exercised) = options.markets(marketId);
+        assertEq(remaining, 1000_00);
+        assertEq(exercised, 0);
+
+        base.transfer(purchaser, 125_00);
+        vm.startPrank(purchaser);
+        {
+            base.approve(address(options), 125_00);
+            options.depositTo(purchaser, base, 125_00);
+
+            options.exercise(marketId, 500_00);
+            assertEq(options.balanceOf(purchaser, marketId), 500_00);
+            assertEq(options.balanceOf(purchaser, MarketId.fromToken(base)), 0);
+            (remaining, exercised) = options.markets(marketId);
+            assertEq(remaining, 500_00);
+            assertEq(exercised, 500_00);
+        }
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        {
+            skip(7 * DAY);
+            operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+            assertEq(base.balanceOf(alice), 125_00);
+            assertEq(token.balanceOf(alice), 500_00);
+        }
+    }
 }
