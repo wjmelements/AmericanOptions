@@ -174,7 +174,24 @@ contract AmericanOptionsTest is Test {
             assertEq(remaining, 1_00);
             assertEq(exercised, 0);
 
+            vm.recordLogs();
             options.close(marketId, 1_00);
+            Vm.Log[] memory entries = vm.getRecordedLogs();
+            assertEq(entries.length, 2);
+            assertEq(entries[0].topics[0], keccak256("Transfer(address,address,address,uint256,uint256)"));
+            assertEq(entries[0].topics[1], bytes32(uint256(uint160(address(this)))));
+            assertEq(entries[0].topics[2], bytes32(0));
+            assertEq(entries[0].topics[3], bytes32(marketId));
+            (address caller, uint256 amount) = abi.decode(entries[0].data, (address, uint256));
+            assertEq(caller, address(this));
+            assertEq(amount, 1_00);
+            assertEq(entries[1].topics[0], keccak256("Transfer(address,address,address,uint256,uint256)"));
+            assertEq(entries[1].topics[1], bytes32(0));
+            assertEq(entries[1].topics[2], bytes32(uint256(uint160(address(this)))));
+            assertEq(entries[1].topics[3], bytes32(uint256(uint160(address(token)))));
+            (caller, amount) = abi.decode(entries[1].data, (address, uint256));
+            assertEq(caller, address(this));
+            assertEq(amount, 1_00);
             assertEq(options.balanceOf(address(this), marketId), 0);
             (remaining, exercised) = options.markets(marketId);
             assertEq(remaining, 0);
