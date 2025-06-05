@@ -298,13 +298,41 @@ contract AmericanOptionsTest is Test {
             assertEq(options.balanceOf(counterparty, marketId), 1_00);
         }
 
+        Vm.Log[] memory entries;
+        address caller;
+        uint256 amount;
+
         vm.startPrank(counterparty);
         {
             base.approve(address(options), 4_00);
             options.depositTo(counterparty, base, 4_00);
             assertEq(options.balanceOf(counterparty, MarketId.fromToken(base)), 4_00);
 
+            vm.recordLogs();
             options.exercise(marketId, 1_00);
+            entries = vm.getRecordedLogs();
+            assertEq(entries.length, 3);
+            assertEq(entries[0].topics[0], keccak256("Transfer(address,address,address,uint256,uint256)"));
+            assertEq(entries[0].topics[1], bytes32(uint256(uint160(counterparty))));
+            assertEq(entries[0].topics[2], bytes32(uint256(0)));
+            assertEq(entries[0].topics[3], bytes32(MarketId.fromToken(base)));
+            (caller, amount) = abi.decode(entries[0].data, (address, uint256));
+            assertEq(caller, counterparty);
+            assertEq(amount, 4_00);
+            assertEq(entries[1].topics[0], keccak256("Transfer(address,address,address,uint256,uint256)"));
+            assertEq(entries[1].topics[1], bytes32(uint256(uint160(counterparty))));
+            assertEq(entries[1].topics[2], bytes32(uint256(0)));
+            assertEq(entries[1].topics[3], bytes32(marketId));
+            (caller, amount) = abi.decode(entries[1].data, (address, uint256));
+            assertEq(caller, counterparty);
+            assertEq(amount, 1_00);
+            assertEq(entries[2].topics[0], keccak256("Transfer(address,address,address,uint256,uint256)"));
+            assertEq(entries[2].topics[1], bytes32(uint256(0)));
+            assertEq(entries[2].topics[2], bytes32(uint256(uint160(counterparty))));
+            assertEq(entries[2].topics[3], bytes32(uint256(uint160(address(token)))));
+            (caller, amount) = abi.decode(entries[1].data, (address, uint256));
+            assertEq(caller, counterparty);
+            assertEq(amount, 1_00);
             assertEq(options.balanceOf(counterparty, MarketId.fromToken(base)), 0);
             assertEq(options.balanceOf(counterparty, MarketId.fromToken(token)), 1_00);
             (remaining, exercised) = options.markets(marketId);
@@ -324,15 +352,15 @@ contract AmericanOptionsTest is Test {
         vm.expectRevert();
         options.expire(marketId, 1_00);
 
-        vm.recordLogs();
+        vm.getRecordedLogs(); // drop prior logs
         options.acceptAssignment(marketId, 1_00);
-        Vm.Log[] memory entries = vm.getRecordedLogs();
+        entries = vm.getRecordedLogs();
         assertEq(entries.length, 1);
         assertEq(entries[0].topics[0], keccak256("Transfer(address,address,address,uint256,uint256)"));
         assertEq(entries[0].topics[1], bytes32(uint256(0)));
         assertEq(entries[0].topics[2], bytes32(uint256(uint160(address(this)))));
         assertEq(entries[0].topics[3], bytes32(uint256(uint160(address(base)))));
-        (address caller, uint256 amount) = abi.decode(entries[0].data, (address, uint256));
+        (caller, amount) = abi.decode(entries[0].data, (address, uint256));
         assertEq(caller, address(this));
         assertEq(amount, 4_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 4_00);
