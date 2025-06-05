@@ -126,8 +126,9 @@ contract AmericanCallOptions is IERC6909 {
         emit Transfer(msg.sender, msg.sender, address(0), baseMarket, baseAmount);
         emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
         emit Transfer(msg.sender, address(0), msg.sender, tokenId, amount);
-        markets[marketId].exercised += amount;
-        markets[marketId].remaining -= amount;
+        Market storage market = markets[marketId];
+        market.exercised += amount;
+        market.remaining -= amount;
     }
 
     /// @notice Burn call options to release locked collateral
