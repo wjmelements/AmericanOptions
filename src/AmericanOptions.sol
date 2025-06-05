@@ -95,7 +95,7 @@ contract AmericanCallOptions is IERC6909 {
 
     /// @notice Lock tokens to write call options
     /// @param marketId specifying the call's token, expiration, and strike price
-    /// @param amount tokens to write options against
+    /// @param amount collateral tokens to write options against
     function open(uint256 marketId, uint128 amount) external {
         (uint256 tokenId, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
         require(expiry >= block.timestamp);
@@ -109,7 +109,7 @@ contract AmericanCallOptions is IERC6909 {
 
     /// @notice Exercise call options, purchasing locked tokens at the strike price
     /// @param marketId specifying the call's token, expiration, and strike price
-    /// @param amount tokens to purchase
+    /// @param amount collateral tokens to purchase
     function exercise(uint256 marketId, uint128 amount) external {
         (uint256 tokenId, uint256 expiry, uint256 strike) = marketId.unpack();
         require(expiry >= block.timestamp);
@@ -126,7 +126,7 @@ contract AmericanCallOptions is IERC6909 {
 
     /// @notice Burn call options to release locked collateral
     /// @param marketId specifying the call's token, expiration, and strike price
-    /// @param amount tokens to release
+    /// @param amount collateral tokens to release
     function close(uint256 marketId, uint128 amount) external {
         markets[marketId].remaining -= amount;
         balanceOf[msg.sender][marketId] -= amount;
@@ -138,7 +138,7 @@ contract AmericanCallOptions is IERC6909 {
 
     /// @notice Release locked collateral backing expired call options
     /// @param marketId specifying the call's token, expiration, and strike price
-    /// @param amount tokens to release
+    /// @param amount collateral tokens to release
     function expire(uint256 marketId, uint128 amount) external {
         (uint256 tokenId, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
         require(expiry < block.timestamp);
