@@ -9,6 +9,19 @@ This implements Call Options as IERC6909.
 * **expire**: free collateral for expired options
 * **acceptAssignment**: receive base tokens for sold locked collateral
 
+#### Invariant
+```
+Market.exercised + Market.remaining = sum(lockedCollateral)
+```
+
+All operations modify Market.exercised + Market.remaining by the same amount that they modify lockedCollateral:
+
+* `open` increases `lockedCollateral` and `Market.remaining` by `amount`.
+* `exercise` increases `Market.exercised` by the same amount that it decreases `Market.remaining`.
+* `close` and `expire` decrease `lockedCollateral` and `Market.remaining` by `amount`.
+* `acceptAssignment` decreases `lockedCollateral` and `Market.exercised` by `amount`.
+
+
 ### MarketId
 The upper bits of the option market identifier indicate the price and the expiry.
 
@@ -37,6 +50,14 @@ Then we would need a new protocol.
 ### Price
 Price is a 72-bit square root ratio in [q32.40](https://en.wikipedia.org/wiki/Q_(number_format)), which I abbreviate as Q40 in the codebase.
 This means that `2**40` is 1, `2**41` is 4, and `2**39` is 0.25.
+
+Because of this design, higher prices have more precision than lower prices.
+Additionally, squaring the price reduces precision by about half.
+The highest possible price is about `16 * 10**18`.
+The are still about 5 bits of precision when the effective price ratio was around `10**-18`.
+
+The advantage of this design is a wider range of possible prices than could be achieved with fixed-precision.
+
 
 ### Assignment
 Executing call options purchases locked collateral.
