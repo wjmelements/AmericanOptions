@@ -49,6 +49,15 @@ contract AmericanOptions7702OperatorTest is Test {
 
         vm.expectRevert();
         operatorAlice.exerciseAll(marketId);
+
+        vm.expectRevert();
+        operatorAlice.reverseExercise(marketId, 0);
+
+        vm.expectRevert();
+        operatorAlice.closeAndWithdrawExpiredPositionPreferringCollateral(marketId);
+
+        vm.expectRevert();
+        operatorAlice.closePosition(marketId, 0, 0);
     }
 
     function test_CloseExpiredPreferringCollateral_NoneExercised() public {

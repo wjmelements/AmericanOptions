@@ -54,22 +54,42 @@ contract AmericanOptions7702Operator {
         options.withdrawTo(msg.sender, baseToken, strike.toBaseDown(exercised));
     }
 
-    function closeAndWithdrawExpiredPositionPreferringCollateral(uint256 marketId) external onlySelf {
+    function closeAndWithdrawExpiredPositionPreferringAssignment(uint256 marketId) external {
         uint128 locked = options.lockedCollateral(msg.sender, marketId);
-        (uint128 remaining, uint128 exercised) = options.markets(marketId);
-        if (remaining > 0) {
-            if (remaining >= locked) {
-                exercised = 0;
-                remaining = locked;
+        (uint128 expired, uint128 exercised) = options.markets(marketId);
+        if (exercised > 0) {
+            if (exercised >= locked) {
+                expired = 0;
+                exercised = locked;
             } else {
-                exercised = locked - remaining;
+                expired = locked - exercised;
+            }
+        } else {
+            expired = locked;
+        }
+        closePosition(marketId, expired, exercised);
+    }
+
+    function closeAndWithdrawExpiredPositionPreferringCollateral(uint256 marketId) external {
+        uint128 locked = options.lockedCollateral(msg.sender, marketId);
+        (uint128 expired, uint128 exercised) = options.markets(marketId);
+        if (expired > 0) {
+            if (expired >= locked) {
+                exercised = 0;
+                expired = locked;
+            } else {
+                exercised = locked - expired;
             }
         } else {
             exercised = locked;
         }
-        if (remaining > 0) {
-            options.expire(marketId, remaining);
-            options.withdrawTo(msg.sender, marketId.toToken(), remaining);
+        closePosition(marketId, expired, exercised);
+    }
+
+    function closePosition(uint256 marketId, uint128 expired, uint128 exercised) public onlySelf {
+        if (expired > 0) {
+            options.expire(marketId, expired);
+            options.withdrawTo(msg.sender, marketId.toToken(), expired);
         }
         if (exercised > 0) {
             options.acceptAssignment(marketId, exercised);
