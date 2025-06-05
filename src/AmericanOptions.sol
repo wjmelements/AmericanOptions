@@ -114,11 +114,14 @@ contract AmericanCallOptions is IERC6909 {
         (uint256 tokenId, uint256 expiry, uint256 strike) = marketId.unpack();
         require(expiry >= block.timestamp);
         uint256 baseAmount = strike.toBaseUp(amount);
-        balanceOf[msg.sender][baseMarket] -= baseAmount;
+        {
+            mapping (uint256 => uint256) storage balances = balanceOf[msg.sender];
+            balances[baseMarket] -= baseAmount;
+            balances[marketId] -= amount;
+            balances[tokenId] += amount;
+        }
         emit Transfer(msg.sender, msg.sender, address(0), baseMarket, baseAmount);
-        balanceOf[msg.sender][marketId] -= amount;
         emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
-        balanceOf[msg.sender][tokenId] += amount;
         emit Transfer(msg.sender, address(0), msg.sender, tokenId, amount);
         markets[marketId].exercised += amount;
         markets[marketId].remaining -= amount;
