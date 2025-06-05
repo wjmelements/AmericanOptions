@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 import {AmericanCallOptions} from "../src/AmericanOptions.sol";
 import {MarketId} from "../src/MarketId.sol";
 import {FalseToken} from "./FalseToken.sol";
@@ -56,12 +57,40 @@ contract AmericanOptionsTest is Test {
         options.depositTo(address(this), base, 1_00);
 
         base.approve(address(options), 1_00);
+
+        vm.recordLogs();
         options.depositTo(address(this), base, 1_00);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 2);
+        assertEq(entries[0].topics[0], keccak256("Transfer(address,address,uint256)"));
+        assertEq(entries[0].topics[1], bytes32(uint256(uint160(address(this)))));
+        assertEq(entries[0].topics[2], bytes32(uint256(uint160(address(options)))));
+        assertEq(abi.decode(entries[0].data, (uint256)), 1_00);
+        assertEq(entries[1].topics[0], keccak256("Transfer(address,address,address,uint256,uint256)"));
+        assertEq(entries[1].topics[1], bytes32(uint256(0)));
+        assertEq(entries[1].topics[2], bytes32(uint256(uint160(address(this)))));
+        assertEq(entries[1].topics[3], bytes32(uint256(uint160(address(base)))));
+        (address caller, uint256 amount) = abi.decode(entries[1].data, (address, uint256));
+        assertEq(caller, address(this));
+        assertEq(amount, 1_00);
         assertEq(base.balanceOf(address(this)), 9999_00);
         assertEq(base.balanceOf(address(options)), 1_00);
         assertEq(options.balanceOf(address(this), MarketId.fromToken(base)), 1_00);
 
         options.withdrawTo(address(this), base, 1_00);
+        entries = vm.getRecordedLogs();
+        assertEq(entries.length, 2);
+        assertEq(entries[0].topics[0], keccak256("Transfer(address,address,uint256)"));
+        assertEq(entries[0].topics[1], bytes32(uint256(uint160(address(options)))));
+        assertEq(entries[0].topics[2], bytes32(uint256(uint160(address(this)))));
+        assertEq(abi.decode(entries[0].data, (uint256)), 1_00);
+        assertEq(entries[1].topics[0], keccak256("Transfer(address,address,address,uint256,uint256)"));
+        assertEq(entries[1].topics[1], bytes32(uint256(uint160(address(this)))));
+        assertEq(entries[1].topics[2], bytes32(uint256(0)));
+        assertEq(entries[1].topics[3], bytes32(uint256(uint160(address(base)))));
+        (caller, amount) = abi.decode(entries[1].data, (address, uint256));
+        assertEq(caller, address(this));
+        assertEq(amount, 1_00);
         assertEq(base.balanceOf(address(this)), 10000_00);
     }
 
