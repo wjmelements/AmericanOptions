@@ -116,6 +116,19 @@ contract AmericanOptionsTest is Test {
         assertEq(base.balanceOf(address(this)), 10000_00);
     }
 
+    function test_CannotOpenExpiredPosition() public {
+        token.approve(address(options), 1_00);
+        options.depositTo(address(this), token, 1_00);
+        assertEq(token.balanceOf(address(options)), 1_00);
+        assertEq(options.balanceOf(address(this), MarketId.fromToken(token)), 1_00);
+        uint256 expiry = block.timestamp;
+        uint256 strike = 48592008000;
+        uint256 marketId = MarketId.pack(token, expiry, strike);
+
+        vm.expectRevert();
+        options.open(marketId, 1);
+    }
+
     function test_DepositOpenCloseWithdraw() public {
         token.approve(address(options), 1_00);
         options.depositTo(address(this), token, 1_00);
