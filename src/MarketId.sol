@@ -9,8 +9,8 @@ library MarketId {
     uint256 private constant KEY_PRICE_MASK = 0xffffffffffffffffff0000000000000000000000000000000000000000000000;
     // expiry: lower 2 bytes are zero
 
-    function unpack(uint256 key) internal pure returns (IERC20 token, uint256 expiry, uint256 strike) {
-        token = IERC20(address(uint160(key)));
+    function unpack(uint256 key) internal pure returns (uint256 tokenId, uint256 expiry, uint256 strike) {
+        tokenId = key & KEY_TOKEN_MASK;
         expiry = (key & KEY_EXPIRY_MASK) >> 144;
         strike = key >> 184;
     }

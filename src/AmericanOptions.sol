@@ -97,10 +97,10 @@ contract AmericanCallOptions is IERC6909 {
     /// @param marketId specifying the call's token, expiration, and strike price
     /// @param amount tokens to write options against
     function open(uint256 marketId, uint128 amount) external {
-        (IERC20 token, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
+        (uint256 tokenId, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
         require(expiry >= block.timestamp);
-        balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
-        emit Transfer(msg.sender, msg.sender, address(0), MarketId.fromToken(token), amount);
+        balanceOf[msg.sender][tokenId] -= amount;
+        emit Transfer(msg.sender, msg.sender, address(0), tokenId, amount);
         lockedCollateral[msg.sender][marketId] += amount;
         balanceOf[msg.sender][marketId] += amount;
         emit Transfer(msg.sender, address(0), msg.sender, marketId, amount);
@@ -111,15 +111,15 @@ contract AmericanCallOptions is IERC6909 {
     /// @param marketId specifying the call's token, expiration, and strike price
     /// @param amount tokens to purchase
     function exercise(uint256 marketId, uint128 amount) external {
-        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
+        (uint256 tokenId, uint256 expiry, uint256 strike) = marketId.unpack();
         require(expiry >= block.timestamp);
         uint256 baseAmount = strike.toBaseUp(amount);
         balanceOf[msg.sender][baseMarket] -= baseAmount;
         emit Transfer(msg.sender, msg.sender, address(0), baseMarket, baseAmount);
         balanceOf[msg.sender][marketId] -= amount;
         emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
-        balanceOf[msg.sender][MarketId.fromToken(token)] += amount;
-        emit Transfer(msg.sender, address(0), msg.sender, MarketId.fromToken(token), amount);
+        balanceOf[msg.sender][tokenId] += amount;
+        emit Transfer(msg.sender, address(0), msg.sender, tokenId, amount);
         markets[marketId].exercised += amount;
         markets[marketId].remaining -= amount;
     }
@@ -140,12 +140,12 @@ contract AmericanCallOptions is IERC6909 {
     /// @param marketId specifying the call's token, expiration, and strike price
     /// @param amount tokens to release
     function expire(uint256 marketId, uint128 amount) external {
-        (IERC20 token, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
+        (uint256 tokenId, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
         require(expiry < block.timestamp);
         lockedCollateral[msg.sender][marketId] -= amount;
         markets[marketId].remaining -= amount;
-        balanceOf[msg.sender][MarketId.fromToken(token)] += amount;
-        emit Transfer(msg.sender, address(0), msg.sender, MarketId.fromToken(token), amount);
+        balanceOf[msg.sender][tokenId] += amount;
+        emit Transfer(msg.sender, address(0), msg.sender, tokenId, amount);
     }
 
     /// @notice Convert locked collateral into base tokens at the strike price

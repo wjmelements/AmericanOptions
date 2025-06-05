@@ -22,8 +22,8 @@ contract MarketIdTest is Test {
         assertTrue(expiry.isValidExpiry());
         uint256 strike = 3_00;
         uint256 marketId = MarketId.pack(usd, expiry, strike);
-        (IERC20 tokenDecoded, uint256 expiryDecoded, uint256 strikeDecoded) = marketId.unpack();
-        assertEq(address(tokenDecoded), address(usd));
+        (uint256 tokenIdDecoded, uint256 expiryDecoded, uint256 strikeDecoded) = marketId.unpack();
+        assertEq(address(uint160(tokenIdDecoded)), address(usd));
         assertEq(strikeDecoded, strike);
         assertEq(expiryDecoded, expiry);
 
@@ -34,8 +34,8 @@ contract MarketIdTest is Test {
 
     function test_USD_unpack_pack() public pure {
         uint256 marketId = 0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef;
-        (IERC20 token, uint256 expiry, uint256 strike) = marketId.unpack();
-        uint256 marketIdDecoded = MarketId.pack(token, expiry, strike);
+        (uint256 tokenId, uint256 expiry, uint256 strike) = marketId.unpack();
+        uint256 marketIdDecoded = MarketId.pack(IERC20(address(uint160(tokenId))), expiry, strike);
         assertEq(marketIdDecoded, marketId);
     }
 }

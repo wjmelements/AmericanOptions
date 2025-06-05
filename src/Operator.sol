@@ -33,12 +33,11 @@ contract AmericanOptions7702Operator {
 
     function exerciseAll(uint256 marketId) external onlySelf {
         uint256 balance = options.balanceOf(msg.sender, marketId);
-        (IERC20 token, /*uint256 expiry*/, uint256 strike) = marketId.unpack();
-        uint256 cost = strike.toBaseUp(balance);
+        uint256 cost = marketId.toStrike().toBaseUp(balance);
         baseToken.approve(address(options), cost);
         options.depositTo(msg.sender, baseToken, cost);
         options.exercise(marketId, uint128(balance));
-        options.withdrawTo(msg.sender, token, balance);
+        options.withdrawTo(msg.sender, marketId.toToken(), balance);
     }
 
     function reverseExercise(uint256 marketId, uint128 maximum) external onlySelf {
@@ -46,12 +45,12 @@ contract AmericanOptions7702Operator {
         if (maximum < exercised) {
             exercised = maximum;
         }
-        (IERC20 token, /*uint256 expiry*/, uint256 strike) = marketId.unpack();
+        IERC20 token = marketId.toToken();
         token.approve(address(options), exercised);
         options.depositTo(msg.sender, token, exercised);
         options.open(marketId, exercised);
         options.acceptAssignment(marketId, exercised);
-        options.withdrawTo(msg.sender, baseToken, strike.toBaseDown(exercised));
+        options.withdrawTo(msg.sender, baseToken, marketId.toStrike().toBaseDown(exercised));
     }
 
     // NOTE closePosition does the onlySelf check
@@ -95,8 +94,7 @@ contract AmericanOptions7702Operator {
         }
         if (exercised > 0) {
             options.acceptAssignment(marketId, exercised);
-            ( /*IERC20 token*/ , /*uint256 expiry*/, uint256 strike) = marketId.unpack();
-            options.withdrawTo(msg.sender, baseToken, strike.toBaseDown(exercised));
+            options.withdrawTo(msg.sender, baseToken, marketId.toStrike().toBaseDown(exercised));
         }
     }
 }
