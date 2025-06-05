@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import {IERC165} from "forge-std/interfaces/IERC165.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IERC6909} from "forge-std/interfaces/IERC6909.sol";
 import {MarketId} from "./MarketId.sol";
@@ -78,7 +79,7 @@ contract AmericanCallOptions is IERC6909 {
         return true;
     }
 
-    /// @inheritdoc IERC6909
+    /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public pure returns (bool supported) {
         return interfaceId == 0x0f632fb3 || interfaceId == 0x01ffc9a7;
     }
