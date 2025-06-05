@@ -75,7 +75,7 @@ contract AmericanCallOptions is IERC6909 {
     }
     // can probably combine with balanceOf mapping
 
-    mapping(address => mapping(uint256 => uint128)) lockedCollateral;
+    mapping(address => mapping(uint256 => uint128)) public lockedCollateral;
     mapping(uint256 => Market) public markets;
 
     function open(uint256 marketId, uint128 amount) external {

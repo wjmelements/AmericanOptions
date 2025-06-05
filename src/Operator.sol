@@ -32,25 +32,25 @@ contract AmericanOptions7702Operator {
     }
 
     function closeAndWithdrawExpiredPositionPreferringCollateral(uint256 marketId) external onlySelf {
-        uint128 amount = uint128(options.balanceOf(msg.sender, marketId));
+        uint128 locked = options.lockedCollateral(msg.sender, marketId);
         (uint128 remaining, uint128 exercised) = options.markets(marketId);
         if (remaining > 0) {
-            if (remaining >= amount) {
+            if (remaining >= locked) {
                 exercised = 0;
-                remaining = amount;
+                remaining = locked;
             } else {
-                exercised = amount - remaining;
+                exercised = locked - remaining;
             }
         } else {
-            exercised = amount;
+            exercised = locked;
         }
         if (remaining > 0) {
             options.expire(marketId, remaining);
             options.withdrawTo(msg.sender, marketId.toToken(), remaining);
         }
         if (exercised > 0) {
-            ( /*IERC20 token*/ , /*uint256 expiry*/, uint256 strike) = marketId.unpack();
             options.acceptAssignment(marketId, exercised);
+            ( /*IERC20 token*/ , /*uint256 expiry*/, uint256 strike) = marketId.unpack();
             options.withdrawTo(msg.sender, baseToken, strike.toBaseDown(exercised));
         }
     }
