@@ -330,7 +330,7 @@ contract AmericanOptionsTest is Test {
             assertEq(entries[2].topics[1], bytes32(uint256(0)));
             assertEq(entries[2].topics[2], bytes32(uint256(uint160(counterparty))));
             assertEq(entries[2].topics[3], bytes32(uint256(uint160(address(token)))));
-            (caller, amount) = abi.decode(entries[1].data, (address, uint256));
+            (caller, amount) = abi.decode(entries[2].data, (address, uint256));
             assertEq(caller, counterparty);
             assertEq(amount, 1_00);
             assertEq(options.balanceOf(counterparty, MarketId.fromToken(base)), 0);
