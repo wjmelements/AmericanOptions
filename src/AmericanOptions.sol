@@ -99,10 +99,13 @@ contract AmericanCallOptions is IERC6909 {
     function open(uint256 marketId, uint128 amount) external {
         (uint256 tokenId, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
         require(expiry >= block.timestamp);
-        balanceOf[msg.sender][tokenId] -= amount;
+        {
+            mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
+            balances[tokenId] -= amount;
+            balances[marketId] += amount;
+        }
         emit Transfer(msg.sender, msg.sender, address(0), tokenId, amount);
         lockedCollateral[msg.sender][marketId] += amount;
-        balanceOf[msg.sender][marketId] += amount;
         emit Transfer(msg.sender, address(0), msg.sender, marketId, amount);
         markets[marketId].remaining += amount;
     }
