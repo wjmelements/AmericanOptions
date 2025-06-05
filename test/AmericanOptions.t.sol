@@ -114,7 +114,7 @@ contract AmericanOptionsTest is Test {
         assertEq(token.balanceOf(address(this)), 10000_00);
     }
 
-    function test_DepositOpenExpireWithdraw() public {
+    function testFuzz_DepositOpenExpireWithdraw(address purchaser) public {
         token.approve(address(options), 1_00);
         options.depositTo(address(this), token, 1_00);
         assertEq(token.balanceOf(address(this)), 9999_00);
@@ -130,13 +130,29 @@ contract AmericanOptionsTest is Test {
             assertEq(exercised, 0);
             assertEq(options.balanceOf(address(this), marketId), 1_00);
 
-            options.transfer(address(0), marketId, 1_00);
-            assertEq(options.balanceOf(address(this), marketId), 0);
+            options.transfer(purchaser, marketId, 1_00);
+            if (purchaser == address(this)) {
+                assertEq(options.balanceOf(address(this), marketId), 1_00);
+            } else {
+                assertEq(options.balanceOf(address(this), marketId), 0);
+            }
 
             vm.expectRevert();
             options.expire(marketId, 1_00);
 
             skip(2 * DAY);
+
+            base.transfer(purchaser, 4_00);
+            vm.startPrank(purchaser);
+            {
+                base.approve(address(options), 4_00);
+                options.depositTo(purchaser, base, 4_00);
+                assertEq(options.balanceOf(purchaser, MarketId.fromToken(base)), 4_00);
+
+                vm.expectRevert();
+                options.exercise(marketId, 1_00);
+            }
+            vm.stopPrank();
 
             options.expire(marketId, 1_00);
             (remaining, exercised) = options.markets(marketId);
