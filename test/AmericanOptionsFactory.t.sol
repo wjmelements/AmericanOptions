@@ -17,7 +17,13 @@ contract AmericanOptionsFactoryTest is Test {
     }
 
     function test_deploy() public {
-        factory.createOptionsMarkets(baseToken);
+        AmericanCallOptions optionsMarkets = factory.createOptionsMarkets(baseToken);
+        bytes32 initCodeHash = keccak256(bytes.concat(type(AmericanCallOptions).creationCode, abi.encode(baseToken)));
+        bytes32 salt = bytes32(uint256(uint160(address(baseToken))));
+        assertEq(
+            address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(factory), salt, initCodeHash))))),
+            address(optionsMarkets)
+        );
     }
 
     function test_deployTwice() public {

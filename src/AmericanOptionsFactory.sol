@@ -14,7 +14,8 @@ contract AmericanCallOptionsFactory {
         if (markets != AmericanCallOptions(address(0))) {
             return markets;
         }
-        markets = optionsMarkets[baseToken] = new AmericanCallOptions(baseToken);
+        markets = optionsMarkets[baseToken] =
+            new AmericanCallOptions{salt: bytes32(uint256(uint160(address(baseToken))))}(baseToken);
         emit NewOptionsMarkets(baseToken, markets);
     }
 }
