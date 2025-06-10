@@ -15,7 +15,6 @@ contract AmericanCallOptionsFactory {
             return markets;
         }
         markets = optionsMarkets[baseToken] = new AmericanCallOptions{salt: bytes32(0)}(baseToken);
-        require(markets != AmericanCallOptions(address(0)));
         emit NewOptionsMarkets(baseToken, markets);
     }
 }
