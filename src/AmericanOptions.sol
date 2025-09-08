@@ -22,11 +22,11 @@ contract AmericanCallOptions is IERC6909 {
     /// @inheritdoc IERC6909
     mapping(address account => mapping(uint256 marketId => uint256)) public balanceOf;
 
-
     struct Approvals {
-        mapping (uint256 marketId => uint256) allowance;
+        mapping(uint256 marketId => uint256) allowance;
         bool isOperator;
     }
+
     mapping(address owner => mapping(address spender => Approvals)) private allowances;
 
     /// @inheritdoc IERC6909
