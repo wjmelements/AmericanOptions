@@ -19,24 +19,30 @@ contract AmericanCallOptions is IERC6909 {
     using MarketId for uint256;
     using PriceQ40 for uint256;
 
-    /// @inheritdoc IERC6909
-    mapping(address account => mapping(uint256 marketId => uint256)) public balanceOf;
-
-
     struct Approvals {
         mapping (uint256 marketId => uint256) allowance;
         bool isOperator;
     }
-    mapping(address owner => mapping(address spender => Approvals)) private allowances;
+    struct Account {
+        mapping(uint256 marketId => uint256) balanceOf;
+        mapping(address spender => Approvals) allowances;
+    }
+
+    mapping(address owner => Account) private accounts;
+
+    /// @inheritdoc IERC6909
+    function balanceOf(address owner, uint256 marketId) public view returns (uint256) {
+        return accounts[owner].balanceOf[marketId];
+    }
 
     /// @inheritdoc IERC6909
     function isOperator(address owner, address spender) public view returns (bool) {
-        return allowances[owner][spender].isOperator;
+        return accounts[owner].allowances[spender].isOperator;
     }
 
     /// @inheritdoc IERC6909
     function allowance(address owner, address spender, uint256 id) public view returns (uint256) {
-        return allowances[owner][spender].allowance[id];
+        return accounts[owner].allowances[spender].allowance[id];
     }
 
     /// @notice Deposit tokens into the protocol
@@ -45,7 +51,7 @@ contract AmericanCallOptions is IERC6909 {
     /// @param amount how many tokens
     function depositTo(address recipient, IERC20 token, uint256 amount) external {
         require(token.transferFrom(msg.sender, address(this), amount));
-        balanceOf[recipient][MarketId.fromToken(token)] += amount;
+        accounts[recipient].balanceOf[MarketId.fromToken(token)] += amount;
         emit Transfer(msg.sender, address(0), recipient, MarketId.fromToken(token), amount);
     }
 
@@ -55,40 +61,41 @@ contract AmericanCallOptions is IERC6909 {
     /// @param amount how many tokens
     function withdrawTo(address recipient, IERC20 token, uint256 amount) external {
         require(token.transfer(recipient, amount));
-        balanceOf[msg.sender][MarketId.fromToken(token)] -= amount;
+        accounts[msg.sender].balanceOf[MarketId.fromToken(token)] -= amount;
         emit Transfer(msg.sender, recipient, address(0), MarketId.fromToken(token), amount);
     }
 
     /// @inheritdoc IERC6909
     function transfer(address recipient, uint256 id, uint256 amount) external returns (bool) {
-        balanceOf[msg.sender][id] -= amount;
-        balanceOf[recipient][id] += amount;
+        accounts[msg.sender].balanceOf[id] -= amount;
+        accounts[recipient].balanceOf[id] += amount;
         emit Transfer(msg.sender, msg.sender, recipient, id, amount);
         return true;
     }
 
     /// @inheritdoc IERC6909
     function transferFrom(address owner, address recipient, uint256 id, uint256 amount) external returns (bool) {
-        Approvals storage approval = allowances[owner][msg.sender];
+        Account storage from = accounts[owner];
+        Approvals storage approval = from.allowances[msg.sender];
         if (!approval.isOperator) {
             approval.allowance[id] -= amount;
         }
-        balanceOf[owner][id] -= amount;
-        balanceOf[recipient][id] += amount;
+        from.balanceOf[id] -= amount;
+        accounts[recipient].balanceOf[id] += amount;
         emit Transfer(msg.sender, owner, recipient, id, amount);
         return true;
     }
 
     /// @inheritdoc IERC6909
     function setOperator(address spender, bool approved) external returns (bool) {
-        allowances[msg.sender][spender].isOperator = approved;
+        accounts[msg.sender].allowances[spender].isOperator = approved;
         emit OperatorSet(msg.sender, spender, approved);
         return true;
     }
 
     /// @inheritdoc IERC6909
     function approve(address spender, uint256 id, uint256 amount) external returns (bool) {
-        allowances[msg.sender][spender].allowance[id] = amount;
+        accounts[msg.sender].allowances[spender].allowance[id] = amount;
         emit Approval(msg.sender, spender, id, amount);
         return true;
     }
@@ -113,7 +120,7 @@ contract AmericanCallOptions is IERC6909 {
     function open(uint256 marketId, uint128 amount) external {
         (uint256 tokenId, uint256 expiry, /*uint256 strike*/ ) = marketId.unpack();
         require(expiry >= block.timestamp);
-        mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
+        mapping(uint256 => uint256) storage balances = accounts[msg.sender].balanceOf;
         balances[tokenId] -= amount;
         balances[marketId] += amount;
         emit Transfer(msg.sender, msg.sender, address(0), tokenId, amount);
@@ -129,7 +136,7 @@ contract AmericanCallOptions is IERC6909 {
         (uint256 tokenId, uint256 expiry, uint256 strike) = marketId.unpack();
         require(expiry >= block.timestamp);
         uint256 baseAmount = strike.toBaseUp(amount);
-        mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
+        mapping(uint256 => uint256) storage balances = accounts[msg.sender].balanceOf;
         balances[baseMarket] -= baseAmount;
         balances[marketId] -= amount;
         balances[tokenId] += amount;
@@ -146,7 +153,7 @@ contract AmericanCallOptions is IERC6909 {
     /// @param amount collateral tokens to release
     function close(uint256 marketId, uint128 amount) external {
         markets[marketId].remaining -= amount;
-        mapping(uint256 => uint256) storage balances = balanceOf[msg.sender];
+        mapping(uint256 => uint256) storage balances = accounts[msg.sender].balanceOf;
         balances[marketId] -= amount;
         balances[marketId.toTokenId()] += amount;
         emit Transfer(msg.sender, msg.sender, address(0), marketId, amount);
@@ -162,7 +169,7 @@ contract AmericanCallOptions is IERC6909 {
         require(expiry < block.timestamp);
         lockedCollateral[msg.sender][marketId] -= amount;
         markets[marketId].remaining -= amount;
-        balanceOf[msg.sender][tokenId] += amount;
+        accounts[msg.sender].balanceOf[tokenId] += amount;
         emit Transfer(msg.sender, address(0), msg.sender, tokenId, amount);
     }
 
@@ -172,7 +179,7 @@ contract AmericanCallOptions is IERC6909 {
     function acceptAssignment(uint256 marketId, uint128 amount) external {
         markets[marketId].exercised -= amount;
         uint256 baseAmount = marketId.toStrike().toBaseDown(amount);
-        balanceOf[msg.sender][baseMarket] += baseAmount;
+        accounts[msg.sender].balanceOf[baseMarket] += baseAmount;
         emit Transfer(msg.sender, address(0), msg.sender, baseMarket, baseAmount);
         lockedCollateral[msg.sender][marketId] -= amount;
     }
