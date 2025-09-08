@@ -21,10 +21,23 @@ contract AmericanCallOptions is IERC6909 {
 
     /// @inheritdoc IERC6909
     mapping(address account => mapping(uint256 marketId => uint256)) public balanceOf;
+
+    struct Approvals {
+        mapping(uint256 marketId => uint256) allowance;
+        bool isOperator;
+    }
+
+    mapping(address owner => mapping(address spender => Approvals)) private allowances;
+
     /// @inheritdoc IERC6909
-    mapping(address owner => mapping(address spender => mapping(uint256 marketId => uint256))) public allowance;
+    function isOperator(address owner, address spender) public view returns (bool) {
+        return allowances[owner][spender].isOperator;
+    }
+
     /// @inheritdoc IERC6909
-    mapping(address owner => mapping(address spender => bool)) public isOperator;
+    function allowance(address owner, address spender, uint256 id) public view returns (uint256) {
+        return allowances[owner][spender].allowance[id];
+    }
 
     /// @notice Deposit tokens into the protocol
     /// @param recipient who to credit
@@ -56,8 +69,9 @@ contract AmericanCallOptions is IERC6909 {
 
     /// @inheritdoc IERC6909
     function transferFrom(address owner, address recipient, uint256 id, uint256 amount) external returns (bool) {
-        if (!isOperator[owner][msg.sender]) {
-            allowance[owner][msg.sender][id] -= amount;
+        Approvals storage approval = allowances[owner][msg.sender];
+        if (!approval.isOperator) {
+            approval.allowance[id] -= amount;
         }
         balanceOf[owner][id] -= amount;
         balanceOf[recipient][id] += amount;
@@ -67,14 +81,14 @@ contract AmericanCallOptions is IERC6909 {
 
     /// @inheritdoc IERC6909
     function setOperator(address spender, bool approved) external returns (bool) {
-        isOperator[msg.sender][spender] = approved;
+        allowances[msg.sender][spender].isOperator = approved;
         emit OperatorSet(msg.sender, spender, approved);
         return true;
     }
 
     /// @inheritdoc IERC6909
     function approve(address spender, uint256 id, uint256 amount) external returns (bool) {
-        allowance[msg.sender][spender][id] = amount;
+        allowances[msg.sender][spender].allowance[id] = amount;
         emit Approval(msg.sender, spender, id, amount);
         return true;
     }
